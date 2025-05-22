@@ -4,7 +4,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding:30px 10%;
+    padding:20px 10%;
 
 }
 
@@ -47,4 +47,16 @@ button{
     padding: 10px 20px;
     cursor: pointer;
     border-radius: 10px;
+}
+
+
+/* Footer section */
+footer {
+    background-color: #3cdb03;
+    color: #090909;
+    text-align: center;
+    padding: 2px;
+
+    /* padding: 20px;
+    position: fixed; */
 }
