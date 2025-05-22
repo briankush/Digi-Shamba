@@ -8,15 +8,22 @@ header {
 
 }
 
+/* Nav bar section */
+#nav-bar h1{
+    font-size: 25px;
+    margin: 0;
+}
+
 #nav-bar ul {
     list-style: none;
     padding-left: 0;
 }
- li {
+
+ #nav-bar li {
     display: inline-block;
     margin-right: 20px;
 }
 
-li a{
+#nav-bar li a{
     text-decoration: none;
 }
