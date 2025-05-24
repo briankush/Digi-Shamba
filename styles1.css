@@ -22,6 +22,9 @@ header h1 {
     margin: 0;
 }
 
+#nav-bar{
+    color: white;
+}
 #nav-bar ul {
     list-style: none;
     padding-left: 0;
@@ -34,28 +37,37 @@ header h1 {
 
 #nav-bar li a{
     text-decoration: none;
+    
 }
 /* remove the underline from the links */
 a{
     text-decoration: none;
 }
 
+.nav-button a{
+    color: white
+}
+
+
+
+
 button{
-    background-color: #3cdb03;
+    background-color: #27a327;
     color: rgb(255, 255, 255);
     border: none;
-    padding: 10px 20px;
+    padding: 10px 10px;
     cursor: pointer;
-    border-radius: 10px;
+    border-radius: 5px;
 }
 
 
 /* Footer section */
 footer {
-    background-color: #3cdb03;
+    background-color: #27a327;
     color: #090909;
     text-align: center;
     padding: 2px;
+    max-width: 100%;
 
     /* padding: 20px;
     position: fixed; */
