@@ -1,5 +1,7 @@
 const FarmAnimal = require('../models/farm');
 
+// POST /api/farm-animals
+
 // Create a new farm animal
 exports.createAnimal = async (req, res) => {
     try {
