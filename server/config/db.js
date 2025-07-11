@@ -1,5 +1,5 @@
 // connection to database
-const mongoose = require('mogoose');
+const mongoose = require('mongoose');
 // connects to MongoDB using mongoose
 
 const connectDB = async() => {
@@ -13,4 +13,4 @@ const connectDB = async() => {
     }
 };
 
-module.exports = connectDB
+module.exports = connectDB;
