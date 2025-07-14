@@ -16,11 +16,9 @@ function Signup() {
     setError("");
     try {
       const res = await axios.post("http://localhost:5000/api/auth/signup", form);
-<<<<<<< HEAD
       localStorage.setItem("userEmail", res.data.email);
-=======
       localStorage.setItem("userId", res.data.userId);
->>>>>>> 83a2be6 (fixed error at backend route, now back to token issues)
+      localStorage.setItem("token", res.data.token);
       navigate("/add-animal");
     } catch (err) {
       setError("Signup failed. Try a different email.");

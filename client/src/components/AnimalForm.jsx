@@ -22,28 +22,13 @@ export default function AnimalForm({ animalType, onSubmit }) {
       return;
     }
     setError("");
-<<<<<<< HEAD
-    const userEmail = localStorage.getItem("userEmail"); // Save this on login/signup
-    axios
-      .post("http://localhost:5000/api/animals", {
-        ...form,
-        type: animalType,
-        email: userEmail,
-      })
-      .then((res) => {
-        if (onSubmit) onSubmit(form);
-      })
-      .catch(() => setError("Failed to save animal record."));
-=======
     try {
-      const email = localStorage.getItem("userEmail");
       const token = localStorage.getItem("token");
       await axios.post(
         "http://localhost:5000/api/farm-animals",
         {
           ...form,
           type: animalType,
-          email,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -51,9 +36,8 @@ export default function AnimalForm({ animalType, onSubmit }) {
       );
       if (onSubmit) onSubmit(form);
     } catch (err) {
-      setError("Failed to save animal record. Check your login and permissions.");
+      setError("Failed to save animal record.");
     }
->>>>>>> 83a2be6 (fixed error at backend route, now back to token issues)
   }
 
   return (
@@ -105,6 +89,22 @@ export default function AnimalForm({ animalType, onSubmit }) {
         />
       </div>
       <div className="flex flex-col gap-2 mb-2">
+        <label className="text-sm font-medium text-gray-700">Notes:</label>
+        <textarea
+          name="notes"
+          value={form.notes}
+          onChange={handleChange}
+          className="px-2 py-1 border rounded placeholder:text-gray-400"
+          placeholder="Any additional info"
+        />
+      </div>
+      {error && <div className="text-red-600 text-sm mb-2">{error}</div>}
+      <button className="mt-4 px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 transition">
+        Save
+      </button>
+    </form>
+  );
+}
         <label className="text-sm font-medium text-gray-700">Notes:</label>
         <textarea
           name="notes"
