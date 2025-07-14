@@ -36,15 +36,22 @@ export default function AnimalForm({ animalType, onSubmit }) {
       .catch(() => setError("Failed to save animal record."));
 =======
     try {
-      const owner = localStorage.getItem("userId");
-      await axios.post("http://localhost:5000/api/farm-animals", {
-        ...form,
-        type: animalType,
-        owner,
-      });
+      const email = localStorage.getItem("userEmail");
+      const token = localStorage.getItem("token");
+      await axios.post(
+        "http://localhost:5000/api/farm-animals",
+        {
+          ...form,
+          type: animalType,
+          email,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (onSubmit) onSubmit(form);
     } catch (err) {
-      setError("Failed to save animal record.");
+      setError("Failed to save animal record. Check your login and permissions.");
     }
 >>>>>>> 83a2be6 (fixed error at backend route, now back to token issues)
   }

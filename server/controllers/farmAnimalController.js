@@ -5,12 +5,24 @@ const FarmAnimal = require("../models/farmAnimal");
 // Create a new farm animal
 exports.createAnimal = async (req, res) => {
   console.log("Create animal request body:", req.body); // Debug log
-  const { type, name, breed, age, weight, notes, owner } = req.body;
+  const { type, name, breed, age, weight, notes } = req.body;
   try {
-    if (!type || !name || !owner) {
-      throw new Error("Missing required fields: type, name, owner");
+    // Use req.user._id from JWT middleware as owner
+    if (!req.user || !req.user.id) {
+      throw new Error("No authenticated user found");
     }
-    const animal = new FarmAnimal({ type, name, breed, age, weight, notes, owner });
+    if (!type || !name) {
+      throw new Error("Missing required fields: type, name");
+    }
+    const animal = new FarmAnimal({
+      type,
+      name,
+      breed,
+      age,
+      weight,
+      notes,
+      owner: req.user.id
+    });
     await animal.save();
     res.status(201).json({ message: "Animal added", animal });
   } catch (err) {
