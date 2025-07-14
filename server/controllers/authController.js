@@ -63,3 +63,16 @@ exports.login = async(req, res) => {
         res.status(500).json({message: "Server error during login"});
     }
 }
+
+
+
+// Logout endpoint logic
+exports.logout = async (req, res) => {
+    try {
+        // Invalidate the token by removing it from the client side
+        res.json({message: "Logged out successfully"});
+    } catch (error) {
+        console.error("Logout error:", error);
+        res.status(500).json({message: "Server error during logout"});
+    }
+};
