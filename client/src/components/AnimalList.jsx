@@ -1,6 +1,16 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-export default function AnimalList({ records, onEdit, onDelete }) {
+export default function AnimalList({ animalType, onEdit, onDelete }) {
+  const [records, setRecords] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get(`http://localhost:5000/api/animals?type=${animalType}`)
+      .then((res) => setRecords(res.data))
+      .catch(() => setRecords([]));
+  }, [animalType]);
+
   return (
     <table className="w-full mt-6 bg-gray-100 rounded shadow">
       <thead>

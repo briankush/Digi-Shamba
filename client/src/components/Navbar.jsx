@@ -7,7 +7,7 @@ export default function Navbar() {
       <span className="font-bold text-xl">Digi-Shamba</span>
       <div className="flex gap-4">
         <Link to="/" className="hover:underline">Home</Link>
-        <Link to="/dashboard" className="hover:underline">Dashboard</Link>
+        <Link to="/add-animal" className="hover:underline">Add Animal</Link>
         <Link to="/login" className="hover:underline">Login</Link>
         <Link to="/signup" className="hover:underline">Sign Up</Link>
       </div>
