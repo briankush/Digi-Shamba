@@ -105,20 +105,5 @@ export default function AnimalForm({ animalType, onSubmit }) {
     </form>
   );
 }
-        <label className="text-sm font-medium text-gray-700">Notes:</label>
-        <textarea
-          name="notes"
-          value={form.notes}
-          onChange={handleChange}
-          className="px-2 py-1 border rounded placeholder:text-gray-400"
-          placeholder="Any additional info"
-        />
-      </div>
-      {error && <div className="text-red-600 text-sm mb-2">{error}</div>}
-      <button className="mt-4 px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 transition">
-        Save
-      </button>
-    </form>
-  );
-}
+      
 

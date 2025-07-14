@@ -16,16 +16,9 @@ function Login() {
     setError("");
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", form);
-<<<<<<< HEAD
       localStorage.setItem("userEmail", res.data.email);
-=======
       localStorage.setItem("userId", res.data.userId);
-<<<<<<< HEAD
->>>>>>> 83a2be6 (fixed error at backend route, now back to token issues)
-=======
-      localStorage.setItem("userEmail", res.data.email);
       localStorage.setItem("token", res.data.token); // Save the JWT token
->>>>>>> bed8893 (Finally fixed the add animal error)
       navigate("/add-animal");
     } catch (err) {
       console.error("Login error:", err); // Debug error
@@ -76,3 +69,4 @@ function Login() {
 }
 
 export default Login;
+        
