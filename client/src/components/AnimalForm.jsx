@@ -15,13 +15,14 @@ export default function AnimalForm({ animalType, onSubmit }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!form.name || !form.breed || !form.age || !form.weight) {
       setError("All fields except notes are required.");
       return;
     }
     setError("");
+<<<<<<< HEAD
     const userEmail = localStorage.getItem("userEmail"); // Save this on login/signup
     axios
       .post("http://localhost:5000/api/animals", {
@@ -33,6 +34,19 @@ export default function AnimalForm({ animalType, onSubmit }) {
         if (onSubmit) onSubmit(form);
       })
       .catch(() => setError("Failed to save animal record."));
+=======
+    try {
+      const owner = localStorage.getItem("userId");
+      await axios.post("http://localhost:5000/api/farm-animals", {
+        ...form,
+        type: animalType,
+        owner,
+      });
+      if (onSubmit) onSubmit(form);
+    } catch (err) {
+      setError("Failed to save animal record.");
+    }
+>>>>>>> 83a2be6 (fixed error at backend route, now back to token issues)
   }
 
   return (
@@ -100,3 +114,4 @@ export default function AnimalForm({ animalType, onSubmit }) {
     </form>
   );
 }
+
