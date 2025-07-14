@@ -1,10 +1,10 @@
 import React from "react";
 
-function Login() {
+function Signup() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white text-black">
       <div className="bg-gray-100 rounded-xl shadow-lg p-8 w-96 flex flex-col items-center border border-gray-300">
-        <h2 className="text-2xl font-bold mb-4">Login</h2>
+        <h2 className="text-2xl font-bold mb-4">Sign Up</h2>
         <form className="flex flex-col gap-4 w-full">
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700 mb-1">Email:</label>
@@ -26,7 +26,7 @@ function Login() {
             type="submit"
             className="px-6 py-2 rounded-lg bg-green-700 text-white hover:bg-green-800 transition"
           >
-            Login
+            Sign Up
           </button>
         </form>
       </div>
@@ -34,4 +34,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Signup;
