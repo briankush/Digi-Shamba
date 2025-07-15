@@ -22,7 +22,7 @@ function AddAnimal() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col items-center py-8">
+    <div className="min-h-screen bg-white text-black flex flex-col items-center pt-20 pb-8">
       <h2 className="text-3xl font-bold mb-8">Add Your Animals</h2>
       {!selectedAnimal ? (
         <div className="grid grid-cols-2 gap-8 w-full max-w-3xl mb-8">
