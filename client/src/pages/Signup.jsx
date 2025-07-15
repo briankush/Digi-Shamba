@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 function Signup() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -16,11 +16,16 @@ function Signup() {
     setError("");
     try {
       const res = await axios.post("http://localhost:5000/api/auth/signup", form);
-      localStorage.setItem("userEmail", res.data.email);
-      localStorage.setItem("userId", res.data.userId);
+      
+      // Save all auth data consistently
       localStorage.setItem("token", res.data.token);
-      navigate("/add-animal");
+      localStorage.setItem("userId", res.data.userId);
+      localStorage.setItem("userName", res.data.name);
+      localStorage.setItem("userEmail", form.email);
+      
+      navigate("/dashboard");
     } catch (err) {
+      console.error("Signup error:", err);
       setError("Signup failed. Try a different email.");
     }
   }
@@ -30,6 +35,18 @@ function Signup() {
       <div className="bg-gray-100 rounded-xl shadow-lg p-8 w-96 flex flex-col items-center border border-gray-300">
         <h2 className="text-2xl font-bold mb-4">Sign Up</h2>
         <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700 mb-1">Name:</label>
+            <input
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="John Doe"
+              className="px-2 py-1 border rounded placeholder:text-gray-400"
+              required
+            />
+          </div>
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700 mb-1">Email:</label>
             <input

@@ -34,10 +34,16 @@ exports.createAnimal = async (req, res) => {
 // Get all farm animals for the logged-in user
 exports.getAllAnimals = async (req, res) => {
   try {
-    const animals = await FarmAnimal.find({ owner: req.user._id });
-    res.json(animals);
+    console.log("Authenticated user ID:", req.user.id);
+
+    // Fetch animals owned by the logged-in user
+    const animals = await FarmAnimal.find({ owner: req.user.id });
+    console.log("Database returned animals:", animals);
+
+    return res.json(animals);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error in getAllAnimals:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 

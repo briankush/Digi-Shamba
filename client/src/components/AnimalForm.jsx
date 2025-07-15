@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-export default function AnimalForm({ animalType, onSubmit }) {
+export default function AnimalForm({ animalType }) {
   const [form, setForm] = useState({
     name: "",
     breed: "",
@@ -10,6 +11,15 @@ export default function AnimalForm({ animalType, onSubmit }) {
     notes: "",
   });
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  // breed options per animal type
+  const breedOptions = {
+    Cows: ["Friesian", "Jersey", "Holstein", "Angus"],
+    Goats: ["Boer", "Kalahari", "Angora", "Alpine"],
+    Chicken: ["Leghorn", "Rhode Island Red", "Plymouth Rock"],
+    Pigs: ["Berkshire", "Yorkshire", "Hampshire", "Duroc"],
+  };
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -24,19 +34,27 @@ export default function AnimalForm({ animalType, onSubmit }) {
     setError("");
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
+      const owner = localStorage.getItem("userId");
+
+      const response = await axios.post(
         "http://localhost:5000/api/farm-animals",
         {
           ...form,
           type: animalType,
+          owner,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      if (onSubmit) onSubmit(form);
+
+      console.log("Animal created:", response.data);
+
+      alert("Animal added successfully!");
+      navigate("/dashboard");
     } catch (err) {
-      setError("Failed to save animal record.");
+      console.error("Create animal failed:", err.response || err);
+      setError(err.response?.data?.message || "Failed to save animal.");
     }
   }
 
@@ -47,38 +65,50 @@ export default function AnimalForm({ animalType, onSubmit }) {
     >
       <h3 className="text-xl font-bold mb-4">Add {animalType} Record</h3>
       <div className="flex flex-col gap-2 mb-2">
-        <label className="text-sm font-medium text-gray-700">Name:</label>
+        <label className="text-sm font-medium text-gray-700">
+          Name / Tag Number:
+        </label>
         <input
           name="name"
           value={form.name}
           onChange={handleChange}
           className="px-2 py-1 border rounded placeholder:text-gray-400"
-          placeholder="e.g. Daisy"
+          placeholder="e.g. Daisy or Tag 123"
         />
       </div>
       <div className="flex flex-col gap-2 mb-2">
         <label className="text-sm font-medium text-gray-700">Breed:</label>
-        <input
+        <select
           name="breed"
           value={form.breed}
           onChange={handleChange}
-          className="px-2 py-1 border rounded placeholder:text-gray-400"
-          placeholder="e.g. Friesian"
-        />
+          className="px-2 py-1 border rounded bg-white"
+        >
+          <option value="">Select breed</option>
+          {breedOptions[animalType]?.map((b) => (
+            <option key={b} value={b}>
+              {b}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="flex flex-col gap-2 mb-2">
-        <label className="text-sm font-medium text-gray-700">Age:</label>
+        <label className="text-sm font-medium text-gray-700">
+          Age (months):
+        </label>
         <input
           name="age"
           type="number"
           value={form.age}
           onChange={handleChange}
           className="px-2 py-1 border rounded placeholder:text-gray-400"
-          placeholder="e.g. 2"
+          placeholder="e.g. 24"
         />
       </div>
       <div className="flex flex-col gap-2 mb-2">
-        <label className="text-sm font-medium text-gray-700">Weight (kg):</label>
+        <label className="text-sm font-medium text-gray-700">
+          Weight (kg):
+        </label>
         <input
           name="weight"
           type="number"
@@ -105,5 +135,5 @@ export default function AnimalForm({ animalType, onSubmit }) {
     </form>
   );
 }
-      
+
 

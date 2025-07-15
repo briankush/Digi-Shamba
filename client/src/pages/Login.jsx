@@ -16,49 +16,46 @@ function Login() {
     setError("");
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", form);
-      localStorage.setItem("userEmail", res.data.email);
+      localStorage.setItem("token", res.data.token);
       localStorage.setItem("userId", res.data.userId);
-      localStorage.setItem("token", res.data.token); // Save the JWT token
-      navigate("/add-animal");
+      localStorage.setItem("userName", res.data.name);
+      navigate("/dashboard");
     } catch (err) {
-      console.error("Login error:", err); // Debug error
       setError("Invalid email or password.");
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white text-black">
-      <div className="bg-gray-100 rounded-xl shadow-lg p-8 w-96 flex flex-col items-center border border-gray-300">
+      <div className="bg-gray-100 rounded-xl shadow-lg p-8 w-96">
         <h2 className="text-2xl font-bold mb-4">Login</h2>
-        <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700 mb-1">Email:</label>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <label className="flex flex-col">
+            <span className="text-sm font-medium text-gray-700">Email:</span>
             <input
               type="email"
               name="email"
               value={form.email}
               onChange={handleChange}
-              placeholder="briankush05@gmail.com"
-              className="px-2 py-1 border rounded placeholder:text-gray-400"
               required
+              className="mt-1 px-2 py-1 border rounded placeholder:text-gray-400"
             />
-          </div>
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700 mb-1">Password:</label>
+          </label>
+          <label className="flex flex-col">
+            <span className="text-sm font-medium text-gray-700">Password:</span>
             <input
               type="password"
               name="password"
               value={form.password}
               onChange={handleChange}
-              placeholder="StrongPass"
-              className="px-2 py-1 border rounded placeholder:text-gray-400"
               required
+              className="mt-1 px-2 py-1 border rounded placeholder:text-gray-400"
             />
-          </div>
-          {error && <div className="text-red-600 text-sm mb-2">{error}</div>}
+          </label>
+          {error && <p className="text-red-600 text-sm">{error}</p>}
           <button
             type="submit"
-            className="px-6 py-2 rounded-lg bg-green-700 text-white hover:bg-green-800 transition"
+            className="mt-2 px-6 py-2 bg-green-700 text-white rounded hover:bg-green-800"
           >
             Login
           </button>
@@ -69,4 +66,4 @@ function Login() {
 }
 
 export default Login;
-        
+      
