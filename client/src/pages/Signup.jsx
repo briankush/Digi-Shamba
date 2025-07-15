@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { AiOutlineUser } from "react-icons/ai"; // add icon
 
 function Signup() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
@@ -16,13 +17,13 @@ function Signup() {
     setError("");
     try {
       const res = await axios.post("http://localhost:5000/api/auth/signup", form);
-      
+
       // Save all auth data consistently
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("userId", res.data.userId);
       localStorage.setItem("userName", res.data.name);
       localStorage.setItem("userEmail", form.email);
-      
+
       navigate("/dashboard");
     } catch (err) {
       console.error("Signup error:", err);
@@ -33,7 +34,10 @@ function Signup() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white text-black">
       <div className="bg-gray-100 rounded-xl shadow-lg p-8 w-96 flex flex-col items-center border border-gray-300">
-        <h2 className="text-2xl font-bold mb-4">Sign Up</h2>
+        {/* centered heading with icon */}
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          <AiOutlineUser size={24} /> Sign Up
+        </h2>
         <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700 mb-1">Name:</label>
@@ -42,8 +46,8 @@ function Signup() {
               name="name"
               value={form.name}
               onChange={handleChange}
-              placeholder="John Doe"
-              className="px-2 py-1 border rounded placeholder:text-gray-400"
+              placeholder="Brian Mwangi"
+              className="px-2 py-1 border rounded-md placeholder:text-gray-400"
               required
             />
           </div>
@@ -55,7 +59,7 @@ function Signup() {
               value={form.email}
               onChange={handleChange}
               placeholder="briankush05@gmail.com"
-              className="px-2 py-1 border rounded placeholder:text-gray-400"
+              className="px-2 py-1 border rounded-md placeholder:text-gray-400"
               required
             />
           </div>
@@ -67,7 +71,7 @@ function Signup() {
               value={form.password}
               onChange={handleChange}
               placeholder="StrongPass"
-              className="px-2 py-1 border rounded placeholder:text-gray-400"
+              className="px-2 py-1 border rounded-md placeholder:text-gray-400"
               required
             />
           </div>

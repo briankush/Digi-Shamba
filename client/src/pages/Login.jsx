@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { AiOutlineUser } from "react-icons/ai"; // swapped icon
 
 function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -27,9 +28,12 @@ function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white text-black">
-      <div className="bg-gray-100 rounded-xl shadow-lg p-8 w-96">
-        <h2 className="text-2xl font-bold mb-4">Login</h2>
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+      <div className="bg-gray-100 rounded-xl shadow-lg p-8 w-96 flex flex-col items-center border border-gray-300">
+        {/* centered heading with user icon */}
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          <AiOutlineUser size={24} /> Login
+        </h2>
+        <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
           <label className="flex flex-col">
             <span className="text-sm font-medium text-gray-700">Email:</span>
             <input
@@ -38,7 +42,7 @@ function Login() {
               value={form.email}
               onChange={handleChange}
               required
-              className="mt-1 px-2 py-1 border rounded placeholder:text-gray-400"
+              className="mt-1 px-2 py-1 border rounded-md placeholder:text-gray-400" // rounded-md
             />
           </label>
           <label className="flex flex-col">
@@ -49,7 +53,7 @@ function Login() {
               value={form.password}
               onChange={handleChange}
               required
-              className="mt-1 px-2 py-1 border rounded placeholder:text-gray-400"
+              className="mt-1 px-2 py-1 border rounded-md placeholder:text-gray-400" // rounded-md
             />
           </label>
           {error && <p className="text-red-600 text-sm">{error}</p>}

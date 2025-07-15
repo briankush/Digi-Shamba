@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import cowImage from "../Images/cows.jfif"; // <-- Import the image
+import cowImage from "../Images/cows.jfif";
 
 function LandingPage() {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ function LandingPage() {
   return (
     <div
       className="relative min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: `url(${cowImage})` }} // <-- Use imported image
+      style={{ backgroundImage: `url(${cowImage})` }}
     >
       {/* dark overlay */}
       <div className="absolute inset-0 bg-black/40"></div>
@@ -17,8 +17,10 @@ function LandingPage() {
       {/* page content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen text-white">
         <Navbar />
-        <h1 className="text-4xl font-bold mb-4">Digi-Shamba</h1>
-        <p className="mb-8 max-w-xl text-center">
+        {/* increased heading size */}
+        <h1 className="text-5xl font-bold mb-4">Digi-Shamba</h1>
+        {/* increased paragraph font size */}
+        <p className="mb-8 max-w-xl text-center text-lg">
           Digi-Shamba is a modern livestock record keeping platform for farmers.
           Easily manage your animals, track health, and streamline your farm
           operations.
