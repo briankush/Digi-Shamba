@@ -63,10 +63,54 @@ export default function AnimalForm({ animalType, animal, onSubmit, onCancel }) {
   }
 
   const breedOptions = {
-    Cows: ["Friesian", "Jersey", "Holstein", "Angus"],
-    Goats: ["Boer", "Kalahari", "Angora", "Alpine"],
-    Chicken: ["Leghorn", "Rhode Island Red", "Plymouth Rock"],
-    Pigs: ["Berkshire", "Yorkshire", "Hampshire", "Duroc"],
+    Cows: [
+      "Friesian",
+      "Jersey",
+      "Holstein",
+      "Angus",
+      "Guernsey",
+      "Brown Swiss",
+      "Hereford",
+      "Charolais",
+      "Simmental",
+      "Brahman",
+    ],
+    Goats: [
+      "Boer",
+      "Kalahari",
+      "Angora",
+      "Alpine",
+      "Nubian",
+      "Saanen",
+      "Toggenburg",
+      "LaMancha",
+      "Oberhasli",
+      "Spanish",
+    ],
+    Chicken: [
+      "Leghorn",
+      "Rhode Island Red",
+      "Plymouth Rock",
+      "Sussex",
+      "Wyandotte",
+      "Silkie",
+      "Orpington",
+      "Australorp",
+      "Marans",
+      "Brahma",
+    ],
+    Pigs: [
+      "Berkshire",
+      "Yorkshire",
+      "Hampshire",
+      "Duroc",
+      "Large White",
+      "Landrace",
+      "Tamworth",
+      "Chester White",
+      "Poland China",
+      "Spot",
+    ],
   };
 
   return (
