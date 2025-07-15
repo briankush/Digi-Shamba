@@ -8,6 +8,9 @@ import {
   FaTwitter,
   FaInstagram,
   FaCopyright,
+  FaHeartbeat,
+  FaChartLine,
+  FaTachometerAlt,
 } from "react-icons/fa";
 import Navbar from "../components/Navbar";
 import cowImage from "../Images/cows.jfif";
@@ -70,36 +73,26 @@ function LandingPage() {
       >
         <h2 className="text-3xl font-bold mb-6">Why Choose Digi-Shamba?</h2>
         <div className="grid md:grid-cols-3 gap-10 mt-10">
-          <div>
-            <img
-              src="/images/feature1.jpg"
-              alt="Animal Health"
-              className="w-full h-48 object-cover rounded-xl mb-4"
-            />
+          <div className="flex flex-col items-center p-6 rounded-xl shadow bg-gray-50 hover:shadow-lg transition">
+            <FaHeartbeat className="text-5xl text-green-600 mb-4" />
             <h3 className="text-xl font-semibold mb-2">Health Tracking</h3>
             <p>
               Monitor treatments, vaccinations, and illnesses with precision to
               ensure your herd’s well-being.
             </p>
           </div>
-          <div>
-            <img
-              src="/images/feature2.jpg"
-              alt="Production Insights"
-              className="w-full h-48 object-cover rounded-xl mb-4"
-            />
+
+          <div className="flex flex-col items-center p-6 rounded-xl shadow bg-gray-50 hover:shadow-lg transition">
+            <FaChartLine className="text-5xl text-blue-600 mb-4" />
             <h3 className="text-xl font-semibold mb-2">Performance Insights</h3>
             <p>
               Track milk yields, growth, and productivity trends to make
               informed farming decisions.
             </p>
           </div>
-          <div>
-            <img
-              src="/images/feature3.jpg"
-              alt="Smart Dashboard"
-              className="w-full h-48 object-cover rounded-xl mb-4"
-            />
+
+          <div className="flex flex-col items-center p-6 rounded-xl shadow bg-gray-50 hover:shadow-lg transition">
+            <FaTachometerAlt className="text-5xl text-purple-600 mb-4" />
             <h3 className="text-xl font-semibold mb-2">Smart Dashboard</h3>
             <p>
               Visualize your farm data with easy-to-use dashboards and real-time
@@ -166,48 +159,44 @@ function LandingPage() {
       </section>
 
       {/* FOOTER */}
-     <footer className="bg-gray-900 text-white py-10 px-6">
-  <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-center items-center text-center md:text-left gap-y-10 md:gap-y-0 md:gap-x-20">
-    
-    {/* Contact Info */}
-    <div>
-      <h3 className="text-xl font-bold mb-4">Contact Us</h3>
-      <p className="flex justify-center md:justify-start items-center gap-2">
-        <FaPhoneAlt /> +254 712 345 678
-      </p>
-      <p className="flex justify-center md:justify-start items-center gap-2 mt-2">
-        <FaEnvelope /> support@digishamba.co.ke
-      </p>
-    </div>
+      <footer className="bg-gray-900 text-white py-10 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-center items-center text-center md:text-left gap-y-10 md:gap-y-0 md:gap-x-20">
+          {/* Contact Info */}
+          <div>
+            <h3 className="text-xl font-bold mb-4">Contact Us</h3>
+            <p className="flex justify-center md:justify-start items-center gap-2">
+              <FaPhoneAlt /> +254 712 345 678
+            </p>
+            <p className="flex justify-center md:justify-start items-center gap-2 mt-2">
+              <FaEnvelope /> support@digishamba.co.ke
+            </p>
+          </div>
 
-    {/* Social Media */}
-    <div>
-      <h3 className="text-xl font-bold mb-4">Follow Us</h3>
-      <div className="flex justify-center md:justify-start gap-6 text-2xl">
-        <a href="https://facebook.com" target="_blank" rel="noreferrer">
-          <FaFacebook className="hover:text-blue-500" />
-        </a>
-        <a href="https://twitter.com" target="_blank" rel="noreferrer">
-          <FaTwitter className="hover:text-sky-400" />
-        </a>
-        <a href="https://instagram.com" target="_blank" rel="noreferrer">
-          <FaInstagram className="hover:text-pink-400" />
-        </a>
-      </div>
-    </div>
+          {/* Social Media */}
+          <div>
+            <h3 className="text-xl font-bold mb-4">Follow Us</h3>
+            <div className="flex justify-center md:justify-start gap-6 text-2xl">
+              <a href="https://facebook.com" target="_blank" rel="noreferrer">
+                <FaFacebook className="hover:text-blue-500" />
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noreferrer">
+                <FaTwitter className="hover:text-sky-400" />
+              </a>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer">
+                <FaInstagram className="hover:text-pink-400" />
+              </a>
+            </div>
+          </div>
 
-    {/* Copyright */}
-    <div>
-      <h3 className="text-xl font-bold mb-4">Digi-Shamba</h3>
-      <p className="flex justify-center md:justify-start items-center gap-2 text-sm text-gray-400">
-        <FaCopyright /> {new Date().getFullYear()} Digi-Shamba. All rights reserved.
-      </p>
-    </div>
-
-  </div>
-</footer>
-
-
+          {/* Copyright */}
+          <div>
+            <h3 className="text-xl font-bold mb-4">Digi-Shamba</h3>
+            <p className="flex justify-center md:justify-start items-center gap-2 text-sm text-gray-400">
+              <FaCopyright /> {new Date().getFullYear()} Digi-Shamba. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
     </>
   );
 }
