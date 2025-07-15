@@ -24,7 +24,7 @@ function Dashboard() {
       if (idx > fullMessage.length) {
         clearInterval(interval);
       }
-    }, 100); // back to 100ms
+    }, 100); // normal speed
     return () => clearInterval(interval);
   }, [fullMessage]);
 
@@ -87,14 +87,14 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-8">
+    <div className="min-h-screen bg-white text-black p-8 pt-20">
+      <h2 className="text-2xl font-semibold mb-4">
+        {typedMsg}
+        {typedMsg.length <= fullMessage.length && (
+          <span className="blinking-cursor">|</span>
+        )}
+      </h2>
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-2xl font-semibold mb-4">
-          {typedMsg}
-          {typedMsg.length < fullMessage.length && (
-            <span className="blinking-cursor">|</span>
-          )}
-        </h2>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">My Farm Animals</h1>
           <div className="flex gap-2">
