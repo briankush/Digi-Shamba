@@ -1,45 +1,65 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import AnimalForm from "../components/AnimalForm";
 
 function Dashboard() {
   const [animals, setAnimals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [typedName, setTypedName] = useState("");
+  const [typedMsg, setTypedMsg] = useState("");
+  const [editingAnimal, setEditingAnimal] = useState(null);
   const navigate = useNavigate();
 
   const userEmail = localStorage.getItem("userEmail") || "";
-  const userName = userEmail.split("@")[0] || "Farmer";
-  const fullName = localStorage.getItem("userName") || "Farmer";
+  const userName = localStorage.getItem("userName") || "Farmer";
+  const fullMessage = `Welcome back, ${userName}!`;
 
   useEffect(() => {
     let idx = 0;
     const interval = setInterval(() => {
-      setTypedName(fullName.slice(0, idx + 1));
+      setTypedMsg(fullMessage.slice(0, idx + 1));
       idx++;
-      if (idx > fullName.length) clearInterval(interval);
-    }, 200); // slowed to 200ms
+      if (idx > fullMessage.length) {
+        clearInterval(interval);
+      }
+    }, 100); // back to 100ms
     return () => clearInterval(interval);
-  }, [fullName]);
+  }, [fullMessage]);
+
+  const fetchAnimals = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:5000/api/farm-animals", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAnimals(res.data);
+    } catch (err) {
+      setError("Failed to load animals");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAnimals = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return navigate("/login");
-      try {
-        const res = await axios.get("http://localhost:5000/api/farm-animals", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setAnimals(res.data);
-      } catch (err) {
-        setError("Unable to load animals");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchAnimals();
-  }, [navigate]);
+  }, []);
+
+  // Delete with confirmation
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this animal?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:5000/api/farm-animals/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchAnimals();
+    } catch {
+      setError("Failed to delete animal");
+    }
+  };
 
   const handleAddAnimal = () => {
     navigate("/add-animal");
@@ -49,12 +69,31 @@ function Dashboard() {
     return <div className="text-center p-8">Loading your animals...</div>;
   }
 
+  // Editing state
+  if (editingAnimal) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <AnimalForm
+          animalType={editingAnimal.type}
+          animal={editingAnimal}
+          onSubmit={() => {
+            setEditingAnimal(null);
+            fetchAnimals();
+          }}
+          onCancel={() => setEditingAnimal(null)}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white text-black p-8">
+    <div className="min-h-screen bg-white p-8">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-2xl font-semibold mb-4">
-          Welcome back, {typedName}
-          <span className="blinking-cursor">|</span>
+          {typedMsg}
+          {typedMsg.length < fullMessage.length && (
+            <span className="blinking-cursor">|</span>
+          )}
         </h2>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">My Farm Animals</h1>
@@ -92,31 +131,40 @@ function Dashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {animals.map((animal) => (
-              <div
-                key={animal._id}
-                className="bg-gray-100 p-4 rounded-lg shadow hover:shadow-md transition"
-              >
-                <h3 className="text-xl font-bold text-green-700">
-                  {animal.name}
-                </h3>
+            {animals.map((a) => (
+              <div key={a._id} className="bg-gray-100 p-4 rounded shadow">
+                <h3 className="text-xl font-bold text-green-700">{a.name}</h3>
                 <p>
-                  <span className="font-medium">Type:</span> {animal.type}
+                  <span className="font-medium">Type:</span> {a.type}
                 </p>
                 <p>
-                  <span className="font-medium">Breed:</span> {animal.breed}
+                  <span className="font-medium">Breed:</span> {a.breed}
                 </p>
                 <p>
-                  <span className="font-medium">Age:</span> {animal.age} months
+                  <span className="font-medium">Age:</span> {a.age} months
                 </p>
                 <p>
-                  <span className="font-medium">Weight:</span> {animal.weight} kg
+                  <span className="font-medium">Weight:</span> {a.weight} kg
                 </p>
-                {animal.notes && (
+                {a.notes && (
                   <p className="mt-2 text-gray-600">
-                    <span className="font-medium">Notes:</span> {animal.notes}
+                    <span className="font-medium">Notes:</span> {a.notes}
                   </p>
                 )}
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => setEditingAnimal(a)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(a._id)}
+                    className="px-3 py-1 bg-red-500 text-white rounded"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>
