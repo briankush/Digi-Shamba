@@ -7,35 +7,94 @@ import {
 } from "recharts";
 
 export default function AnalyticsDashboard() {
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const [entries, setEntries] = useState([]);
-  const [form, setForm] = useState({
-    month: "", feedKg: "", milkL: "", feedCost: "", produceValue: ""
-  });
+  const [form, setForm] = useState({ month: "", feedKg: "", milkL: "", feedCost: "", produceValue: "" });
   const [error, setError] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(months[0]);
   const navigate = useNavigate();
 
-  // Fetch entries with auth header
+  // Normalize month to "Jan", "Feb", etc.
+  const normalizeMonth = (m) => {
+    const match = months.find(mon => mon.toLowerCase() === m.toLowerCase().slice(0, 3));
+    return match || m;
+  };
+
+  // Fetch data
   const fetchData = async () => {
     const token = localStorage.getItem("token");
     if (!token) return navigate("/login");
     try {
       const res = await axios.get("http://localhost:5000/api/analytics", {
-        headers: { Authorization: `Bearer ${token}` }  // <— add header
+        headers: { Authorization: `Bearer ${token}` }
       });
-      setEntries(res.data);
+      const cleaned = res.data.map(e => ({
+        ...e,
+        month: normalizeMonth(e.month)
+      }));
+      setEntries(cleaned);
     } catch (err) {
-      console.error("GET /api/analytics error:", err);
-      // fallback to dummy data
-      setEntries([
-        { month: "May", feedKg: 1200, milkL: 800, feedCost: 0.5, produceValue: 1.2, totalFeedCost: 1200*0.5, totalProduceRevenue: 800*1.2, profitLoss: 800*1.2 - 1200*0.5 },
-        { month: "Jun", feedKg: 1300, milkL: 850, feedCost: 0.5, produceValue: 1.2, totalFeedCost: 1300*0.5, totalProduceRevenue: 850*1.2, profitLoss: 850*1.2 - 1300*0.5 }
-      ]);
+      console.error("GET /api/analytics error:", err.response || err);
+      setError("Failed to load analytics");
     }
   };
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Sort entries by month
+  const sorted = [...entries].sort((a, b) =>
+    months.indexOf(a.month) - months.indexOf(b.month)
+  );
+
+  // Current & Previous entries
+  const currEntry = sorted.find(e => e.month === selectedMonth) || {};
+  const prevEntry = sorted.find(
+    e => e.month === months[months.indexOf(selectedMonth) - 1]
+  ) || {};
+
+  // Current calculations
+  const {
+    feedKg: cfk = 0,
+    feedCost: cpc = 0,
+    milkL: cml = 0,
+    produceValue: cpp = 0,
+    totalFeedCost: tfc,
+    totalProduceRevenue: tpr,
+    profitLoss: tpl
+  } = currEntry;
+
+  const computedFeedCost = tfc != null ? tfc : cfk * cpc;
+  const computedRevenue = tpr != null ? tpr : cml * cpp;
+  const computedProfit = tpl != null ? tpl : computedRevenue - computedFeedCost;
+
+  // Previous calculations
+  const {
+    feedKg: pfk = 0,
+    feedCost: ppc = 0,
+    milkL: pml = 0,
+    produceValue: ppp = 0,
+    profitLoss: ppl
+  } = prevEntry;
+
+  const prevProfit = ppl != null ? ppl : (pml * ppp) - (pfk * ppc);
+
+  // Difference
+  const diff = computedProfit - prevProfit;
+  const sign = diff >= 0 ? "+" : "-";
+  const diffColor = diff >= 0 ? "text-green-600" : "text-red-600";
+
+  const profitData = sorted.map(e => ({
+    month: e.month,
+    profitLoss: e.profitLoss != null ? e.profitLoss : (e.milkL * e.produceValue) - (e.feedKg * e.feedCost)
+  }));
+
+  const feedProduceData = sorted.map(e => ({
+    month: e.month,
+    feedKg: e.feedKg,
+    milkL: e.milkL
+  }));
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -46,55 +105,62 @@ export default function AnalyticsDashboard() {
     setError("");
     const token = localStorage.getItem("token");
     if (!token) return navigate("/login");
+
+    const payload = {
+      month: normalizeMonth(form.month),
+      feedKg: parseFloat(form.feedKg),
+      milkL: parseFloat(form.milkL),
+      feedCost: parseFloat(form.feedCost),
+      produceValue: parseFloat(form.produceValue)
+    };
+
     try {
-      await axios.post(
-        "http://localhost:5000/api/analytics",
-        form,
-        {
-          headers: { Authorization: `Bearer ${token}` }   // add auth header
-        }
-      );
+      await axios.post("http://localhost:5000/api/analytics", payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setForm({ month: "", feedKg: "", milkL: "", feedCost: "", produceValue: "" });
       fetchData();
     } catch (err) {
-      console.error("POST /api/analytics error:", err);
-      setError(err.response?.data?.message || "Failed to save entry");
+      console.error("POST /api/analytics error:", err.response || err);
+      const serverError = err.response?.data?.error || err.response?.data?.message || err.message;
+      setError(serverError);
     }
   };
 
-  // prepare chart data from entries
-  const feedData = entries.map(e => ({ month: e.month, feedKg: e.feedKg, milkL: e.milkL }));
-  const produceData = entries.map(e => ({ month: e.month, milkL: e.milkL }));
-  const profitData = entries.map(e => ({ month: e.month, profitLoss: e.profitLoss }));
-
-  // latest vs previous
-  const current = entries[entries.length - 1] || {};
-  const previous = entries[entries.length - 2] || {};
-  const currProfit = current.profitLoss ?? 0;
-  const prevProfit = previous.profitLoss ?? 0;
-  const diff = currProfit - prevProfit;
-  const sign = diff >= 0 ? "+" : "-";
-  const diffColor = diff >= 0 ? "text-green-600" : "text-red-600";
-
-  // safe last values
-  const latestFeedKg = feedData.length > 0 ? feedData[feedData.length - 1].feedKg : 0;
-  const latestMilkL = produceData.length > 0 ? produceData[produceData.length - 1].milkL : 0;
-
-  // derive latest metrics
-  const latestEntry = entries[entries.length - 1] || {};
-  const latestFeedCost = latestEntry.totalFeedCost || 0;
-  const latestProduceRevenue = latestEntry.totalProduceRevenue || 0;
-  const latestProfitLoss = latestEntry.profitLoss || 0;
-
   return (
     <div className="min-h-screen bg-gray-50 p-8 pt-20">
-      <h1 className="text-3xl font-bold mb-6">Analytics Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-4">Analytics Dashboard</h1>
 
-      {/* Manual Entry Form */}
+      {/* Month Selector */}
+      <div className="mb-6">
+        <label className="mr-2 font-medium">Select Month:</label>
+        <select
+          value={selectedMonth}
+          onChange={e => setSelectedMonth(e.target.value)}
+          className="border rounded px-2 py-1"
+        >
+          {months.map(m => <option key={m} value={m}>{m}</option>)}
+        </select>
+      </div>
+
+      {/* Entry Form */}
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Add Monthly Data</h2>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {["month","feedKg","milkL","feedCost","produceValue"].map(key => (
+          <div className="flex flex-col">
+            <label className="mb-1 font-medium">month</label>
+            <select
+              name="month"
+              value={form.month}
+              onChange={handleChange}
+              className="border rounded px-2 py-1"
+              required
+            >
+              <option value="">Select</option>
+              {months.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          {["feedKg", "milkL", "feedCost", "produceValue"].map(key => (
             <div key={key} className="flex flex-col">
               <label className="mb-1 font-medium">{key}</label>
               <input
@@ -115,72 +181,53 @@ export default function AnalyticsDashboard() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Feed Cost */}
         <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-xl font-semibold">This Month Feed Cost</h2>
-          <p className="text-2xl mt-2">{latestFeedCost} Ksh</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-xl font-semibold">This Month Milk Revenue</h2>
-          <p className="text-2xl mt-2">{latestProduceRevenue} Ksh</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-xl font-semibold">Profit / Loss</h2>
+          <h2 className="text-xl font-semibold">Feed Cost ({selectedMonth})</h2>
           <p className="text-2xl mt-2">
-            {latestProfitLoss >= 0 ? "Profit: " : "Loss: "}
-            {Math.abs(latestProfitLoss)} Ksh
+            {isNaN(computedFeedCost) ? "N/A" : `${computedFeedCost} Ksh`}
+          </p>
+        </div>
+
+        {/* Milk Revenue */}
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h2 className="text-xl font-semibold">Milk Revenue ({selectedMonth})</h2>
+          <p className="text-2xl mt-2">
+            {isNaN(computedRevenue) ? "N/A" : `${computedRevenue} Ksh`}
+          </p>
+        </div>
+
+        {/* Profit/Loss Comparison */}
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h2 className="text-xl font-semibold">
+            Change from {months[months.indexOf(selectedMonth) - 1] || "N/A"}
+          </h2>
+          <p className={`text-2xl mt-2 ${diffColor}`}>
+            {isNaN(diff) ? "N/A" : `${sign}${Math.abs(diff)} Ksh`}
           </p>
         </div>
       </div>
 
-      {/* Comparison Section */}
-      <div className="bg-white p-4 rounded-lg shadow mb-8">
-        <h2 className="text-xl font-semibold mb-4">Profit / Loss Comparison</h2>
-        <div className="flex gap-8">
-          <div>
-            <p className="text-sm text-gray-500">Previous Month</p>
-            <p className="text-2xl">{prevProfit} Ksh</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Current Month</p>
-            <p className="text-2xl">{currProfit} Ksh</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Change</p>
-            <p className={`text-2xl ${diffColor}`}>{sign}{Math.abs(diff)} Ksh</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Profit/Loss Line Chart */}
+      {/* Line Chart */}
       <div className="bg-white p-4 rounded-lg shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Profit/Loss Trend</h2>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart 
-            data={profitData} 
-            margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
-          >
+          <LineChart data={profitData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />               {/* x-axis tick labels */}
-            <YAxis />                                {/* y-axis tick values */}
-            <Tooltip formatter={value => `${value} Ksh`} />
-            <Legend />                               {/* legend for the line */}
-            <Line
-              type="monotone"
-              dataKey="profitLoss"
-              name="Profit/Loss"
-              stroke="#f43f5e"
-              strokeWidth={2}
-              dot={{ r: 4 }}
-            />
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip formatter={val => `${val} Ksh`} />
+            <Legend />
+            <Line type="monotone" dataKey="profitLoss" stroke="#f43f5e" strokeWidth={2} dot={{ r: 4 }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Combined Feed & Produce Chart */}
+      {/* Bar Chart */}
       <div className="bg-white p-4 rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-4">Monthly Feed vs Milk</h2>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={feedData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+          <BarChart data={feedProduceData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
