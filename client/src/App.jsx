@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import AddAnimal from "./pages/AddAnimal";
 import AdminDashboard from "./pages/AdminDashboard";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+import DailyRecords from "./pages/DailyRecords";
 
 function App() {
   const isAdmin = localStorage.getItem("userRole") === "Admin"; // <— dynamic
@@ -32,6 +33,7 @@ function App() {
             }
           />
           <Route path="/analytics" element={<AnalyticsDashboard />} />
+          <Route path="/daily-records" element={<DailyRecords />} />
         </Routes>
       </ErrorBoundary>
     </Router>
