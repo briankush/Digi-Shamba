@@ -68,7 +68,7 @@ function LandingPage() {
         className="bg-white py-16 px-8 text-gray-800 text-center"
         initial={{ opacity: 0, x: 100 }}
         whileInView={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 1.2 }}
         viewport={{ once: true }}
       >
         <h2 className="text-3xl font-bold mb-6">Why Choose Digi-Shamba?</h2>
@@ -107,7 +107,7 @@ function LandingPage() {
         className="bg-gray-100 py-16 px-8 text-center"
         initial={{ opacity: 0, x: -100 }}
         whileInView={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 1.2 }}
         viewport={{ once: true }}
       >
         <h2 className="text-3xl font-bold mb-6">What Farmers Are Saying</h2>
@@ -165,7 +165,7 @@ function LandingPage() {
           <div>
             <h3 className="text-xl font-bold mb-4">Contact Us</h3>
             <p className="flex justify-center md:justify-start items-center gap-2">
-              <FaPhoneAlt /> +254 712 345 678
+              <FaPhoneAlt /> +254 724 829437
             </p>
             <p className="flex justify-center md:justify-start items-center gap-2 mt-2">
               <FaEnvelope /> support@digishamba.co.ke

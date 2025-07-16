@@ -23,6 +23,7 @@ function Signup() {
       localStorage.setItem("userId", res.data.userId);
       localStorage.setItem("userName", res.data.name);
       localStorage.setItem("userEmail", form.email);
+      localStorage.setItem("userRole", res.data.role); // <— store role
 
       navigate("/dashboard");
     } catch (err) {

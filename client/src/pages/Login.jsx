@@ -20,7 +20,13 @@ function Login() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("userId", res.data.userId);
       localStorage.setItem("userName", res.data.name);
-      navigate("/dashboard");
+      localStorage.setItem("userRole", res.data.role);
+      // redirect based on role
+      if (res.data.role === "Admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       setError("Invalid email or password.");
     }

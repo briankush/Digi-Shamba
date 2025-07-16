@@ -16,6 +16,8 @@ export default function Navbar() {
     navigate("/");
   };
 
+  const isAdmin = localStorage.getItem("userRole") === "Admin";
+
   return (
     <nav className="fixed top-0 w-full bg-green-700 text-white shadow z-20">
       <div className="max-w-6xl mx-auto flex items-center justify-between p-4">
@@ -50,9 +52,15 @@ export default function Navbar() {
               </Link>
             </>
           )}
+
+          {isAdmin && (
+            <Link to="/admin" className="flex items-center gap-1 hover:underline">
+              <AiOutlineDashboard size={20}/> Admin
+            </Link>
+          )}
         </div>
       </div>
     </nav>
   );
 }
-    
+

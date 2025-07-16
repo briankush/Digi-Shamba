@@ -24,12 +24,18 @@ router.post("/login", async (req, res) => {
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
       {
-        expiresIn: "1d",
+        expiresIn: "1h",
       }
     );
 
     console.log("Login successful:", user.email);
-    res.json({ userId: user._id, email: user.email, token, name: user.name });
+    res.json({
+      token,
+      userId: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    });
   } catch (err) {
     console.error("Server error:", err);
     res.status(500).json({ message: "Server error" });
@@ -49,10 +55,16 @@ router.post("/signup", async (req, res) => {
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
       {
-        expiresIn: "1d",
+        expiresIn: "1h",
       }
     );
-    res.status(201).json({ userId: user._id, email: user.email, token, name });
+    res.status(201).json({
+      token,
+      userId: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
