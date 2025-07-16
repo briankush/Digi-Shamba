@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AiOutlineHome, AiOutlineDashboard, AiOutlinePlus, AiOutlineLogin, AiOutlineLogout, AiOutlineUser } from "react-icons/ai";
+import { AiOutlineHome, AiOutlineDashboard, AiOutlinePlus, AiOutlineLogin, AiOutlineLogout, AiOutlineUser, AiOutlineBarChart } from "react-icons/ai";
 
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -37,6 +37,9 @@ export default function Navbar() {
               </Link>
               <Link to="/add-animal" className="flex items-center gap-1 hover:underline">
                 <AiOutlinePlus size={20}/> Add Animal
+              </Link>
+              <Link to="/analytics" className="flex items-center gap-1 hover:underline">
+                <AiOutlineBarChart size={20}/> Analytics
               </Link>
               <button onClick={handleLogout} className="flex items-center gap-1 hover:underline">
                 <AiOutlineLogout size={20}/> Logout

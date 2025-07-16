@@ -14,6 +14,8 @@ app.use(express.json());
 app.use("/api/auth", require('./routes/authRoutes'));
 app.use("/api/farm-animals", require('./routes/farmAnimalRoutes'));
 app.use("/api/admin", require('./routes/adminRoutes'));
+const analyticsRoutes = require("./routes/analyticsRoutes");
+app.use("/api/analytics", analyticsRoutes);
 
 
 const PORT = process.env.PORT || 5000;

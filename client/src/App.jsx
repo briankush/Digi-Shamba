@@ -8,6 +8,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import AddAnimal from "./pages/AddAnimal";
 import AdminDashboard from "./pages/AdminDashboard";
+import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 
 function App() {
   const isAdmin = localStorage.getItem("userRole") === "Admin"; // <— dynamic
@@ -30,6 +31,7 @@ function App() {
                 : <Navigate to="/login" replace />
             }
           />
+          <Route path="/analytics" element={<AnalyticsDashboard />} />
         </Routes>
       </ErrorBoundary>
     </Router>
