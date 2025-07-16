@@ -50,9 +50,13 @@ export default function AnalyticsDashboard() {
 
   // Current & Previous entries
   const currEntry = sorted.find(e => e.month === selectedMonth) || {};
-  const prevEntry = sorted.find(
-    e => e.month === months[months.indexOf(selectedMonth) - 1]
-  ) || {};
+  
+  // Get previous month index with wrap-around (Dec is previous to Jan)
+  const currentMonthIndex = months.indexOf(selectedMonth);
+  const prevMonthIndex = currentMonthIndex === 0 ? 11 : currentMonthIndex - 1;
+  const prevMonthName = months[prevMonthIndex];
+  
+  const prevEntry = sorted.find(e => e.month === prevMonthName) || {};
 
   // Current calculations
   const {
@@ -127,21 +131,18 @@ export default function AnalyticsDashboard() {
     }
   };
 
+  // Form labels with units
+  const getFieldLabel = (key) => {
+    switch(key) {
+      case "feedKg": return "feedKg (kg)";
+      case "milkL": return "milkL (L)";
+      default: return key;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8 pt-20">
       <h1 className="text-3xl font-bold mb-4">Analytics Dashboard</h1>
-
-      {/* Month Selector */}
-      <div className="mb-6">
-        <label className="mr-2 font-medium">Select Month:</label>
-        <select
-          value={selectedMonth}
-          onChange={e => setSelectedMonth(e.target.value)}
-          className="border rounded px-2 py-1"
-        >
-          {months.map(m => <option key={m} value={m}>{m}</option>)}
-        </select>
-      </div>
 
       {/* Entry Form */}
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow mb-8">
@@ -162,7 +163,7 @@ export default function AnalyticsDashboard() {
           </div>
           {["feedKg", "milkL", "feedCost", "produceValue"].map(key => (
             <div key={key} className="flex flex-col">
-              <label className="mb-1 font-medium">{key}</label>
+              <label className="mb-1 font-medium">{getFieldLabel(key)}</label>
               <input
                 name={key}
                 value={form[key]}
@@ -179,8 +180,23 @@ export default function AnalyticsDashboard() {
         </button>
       </form>
 
+      {/* Month Selector - moved below the form */}
+      <div className="mb-6 bg-white p-4 rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-2">View Analytics by Month</h2>
+        <div className="flex items-center">
+          <label className="mr-2 font-medium">Select Month:</label>
+          <select
+            value={selectedMonth}
+            onChange={e => setSelectedMonth(e.target.value)}
+            className="border rounded px-3 py-2"
+          >
+            {months.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+      </div>
+
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         {/* Feed Cost */}
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-xl font-semibold">Feed Cost ({selectedMonth})</h2>
@@ -197,12 +213,23 @@ export default function AnalyticsDashboard() {
           </p>
         </div>
 
-        {/* Profit/Loss Comparison */}
+        {/* Total Profit/Loss - RENAMED */}
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h2 className="text-xl font-semibold">Amount Made ({selectedMonth})</h2>
+          <p className={`text-2xl mt-2 ${computedProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
+            {isNaN(computedProfit) ? "N/A" : `${computedProfit >= 0 ? "+" : ""}${computedProfit} Ksh`}
+          </p>
+        </div>
+
+        {/* Profit/Loss Comparison - updated title */}
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-xl font-semibold">
-            Change from {months[months.indexOf(selectedMonth) - 1] || "N/A"}
+            Change from {prevMonthName} (Profit/Loss)
           </h2>
-          <p className={`text-2xl mt-2 ${diffColor}`}>
+          <p className="text-sm mt-2 text-gray-500">
+            {selectedMonth}: {isNaN(computedProfit) ? "N/A" : `${computedProfit} Ksh`} - {prevMonthName}: {isNaN(prevProfit) ? "N/A" : `${prevProfit} Ksh`}
+          </p>
+          <p className={`text-2xl font-bold mt-1 ${diffColor}`}>
             {isNaN(diff) ? "N/A" : `${sign}${Math.abs(diff)} Ksh`}
           </p>
         </div>

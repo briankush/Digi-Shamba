@@ -192,7 +192,7 @@ function LandingPage() {
           <div>
             <h3 className="text-xl font-bold mb-4">Digi-Shamba</h3>
             <p className="flex justify-center md:justify-start items-center gap-2 text-sm text-gray-400">
-              <FaCopyright /> {new Date().getFullYear()} Digi-Shamba. All rights reserved.
+              <FaCopyright /> {new Date().getFullYear()} Digi-Shamba. All rights reserved. Developed by Brian Kuria Mwangi.
             </p>
           </div>
         </div>
