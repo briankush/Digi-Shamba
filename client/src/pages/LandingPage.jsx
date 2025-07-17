@@ -14,9 +14,39 @@ import {
 } from "react-icons/fa";
 import Navbar from "../components/Navbar";
 import cowImage from "../Images/cows.jfif";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function LandingPage() {
   const navigate = useNavigate();
+
+  // Add a global axios interceptor for JWT expiration
+  React.useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        // Check for JWT expiration (401 Unauthorized)
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem("token");
+          toast.error("Session expired. Please login again.", {
+            position: "top-center",
+            autoClose: 4000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [navigate]);
 
   return (
     <>
@@ -197,6 +227,9 @@ function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Place ToastContainer at the root so it works everywhere */}
+      <ToastContainer />
     </>
   );
 }
