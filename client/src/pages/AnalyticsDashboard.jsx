@@ -231,16 +231,7 @@ export default function AnalyticsDashboard() {
     }
   };
 
-  // Add loading check for charts
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-8 pt-20 flex items-center justify-center">
-        <span className="text-xl text-gray-600">Loading analytics...</span>
-      </div>
-    );
-  }
-
-  // When the user selects a month in the analytics form, auto-fill milkL from daily records if available
+  // Move this useEffect ABOVE any conditional returns to follow the Rules of Hooks
   useEffect(() => {
     if (form.month && milkData[form.month] !== undefined) {
       setForm(prev => ({
@@ -250,6 +241,15 @@ export default function AnalyticsDashboard() {
     }
     // Only run when form.month or milkData changes
   }, [form.month, milkData]);
+
+  // Add loading check for charts (AFTER all hooks, before return)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-8 pt-20 flex items-center justify-center">
+        <span className="text-xl text-gray-600">Loading analytics...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 pt-20">
