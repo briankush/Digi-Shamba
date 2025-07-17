@@ -7,13 +7,16 @@ import {
 } from "recharts";
 import { FaCalendarAlt } from "react-icons/fa";
 
+// Move months outside the component to avoid new array reference each render
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 export default function AnalyticsDashboard() {
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const [entries, setEntries] = useState([]);
   const [form, setForm] = useState({ month: "", feedKg: "", milkL: "", feedCost: "", produceValue: "" });
   const [error, setError] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(months[0]);
   const [milkData, setMilkData] = useState({});
+  const [loading, setLoading] = useState(true); // Add loading state
   const navigate = useNavigate();
 
   // Normalize month to "Jan", "Feb", etc.
@@ -26,42 +29,34 @@ export default function AnalyticsDashboard() {
   const fetchData = useCallback(async () => {
     const token = localStorage.getItem("token");
     if (!token) return navigate("/login");
-    
+    setLoading(true);
     try {
       // Fetch analytics data
       const res = await axios.get("http://localhost:5000/api/analytics", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEntries(res.data);
-      
-      // Fetch milk data from daily records for all available months
+
+      // Fetch monthly milk totals for each month
       const currentYear = new Date().getFullYear();
-      const monthlyMilkData = {};
-      
-      // Fetch milk data for each month of current year
-      for (let month = 1; month <= 12; month++) {
+      const milkTotals = {};
+      for (let i = 0; i < months.length; i++) {
         try {
-          const milkRes = await axios.get(
-            `http://localhost:5000/api/daily-records/monthly-totals/${currentYear}/${month}`,
-            { headers: { Authorization: `Bearer ${token}` }}
+          const res = await axios.get(
+            `http://localhost:5000/api/daily-records/monthly-totals/${currentYear}/${i + 1}`,
+            { headers: { Authorization: `Bearer ${token}` } }
           );
-          
-          if (milkRes.data && milkRes.data.totalMilk) {
-            // Store milk data by month abbreviation (Jan, Feb, etc.)
-            const monthName = months[month - 1];
-            monthlyMilkData[monthName] = milkRes.data.totalMilk;
-          }
-        } catch (e) {
-          console.log(`No milk data for month ${month}`);
+          milkTotals[months[i]] = res.data?.totalMilk || 0;
+        } catch {
+          milkTotals[months[i]] = 0;
         }
       }
-      
-      setMilkData(monthlyMilkData);
+      setMilkData(milkTotals);
     } catch (err) {
-      console.error("GET /api/analytics error:", err.response || err);
       setError("Failed to load analytics");
     }
-  }, [navigate]);
+    setLoading(false);
+  }, [navigate]); // Remove months from dependency
 
   useEffect(() => {
     fetchData();
@@ -72,7 +67,7 @@ export default function AnalyticsDashboard() {
     return [...entries].sort((a, b) =>
       months.indexOf(a.month) - months.indexOf(b.month)
     );
-  }, [entries, months]);
+  }, [entries]); // Remove months from dependency
 
   // Current & Previous entries
   const currEntry = sorted.find(e => e.month === selectedMonth) || {};
@@ -119,14 +114,15 @@ export default function AnalyticsDashboard() {
   const sign = diff >= 0 ? "+" : "-";
   const diffColor = diff >= 0 ? "text-green-600" : "text-red-600";
 
-  // Modify chart data preparation to include milk data from daily records
-  const prepareChartData = () => {
-    const chartData = months.map(m => {
+  // Remove all logging from chartData and related memoized functions
+  const chartData = useMemo(() => {
+    return months.map(m => {
       const entry = sorted.find(e => e.month === m) || {};
-      
-      // Use milk data from daily records if available, otherwise use analytics data
-      const milkAmount = milkData[m] !== undefined ? milkData[m] : (entry.milkL || 0);
-      
+      const dailyRecordMilk = milkData[m];
+      const analyticsMilk = entry.milkL;
+      const milkAmount = dailyRecordMilk !== undefined && dailyRecordMilk !== null
+        ? dailyRecordMilk
+        : (analyticsMilk || 0);
       return {
         month: m,
         feedKg: entry.feedKg || 0,
@@ -134,21 +130,15 @@ export default function AnalyticsDashboard() {
         profitLoss: entry.profitLoss !== undefined ? entry.profitLoss : 0
       };
     });
-    
-    return chartData;
-  };
-  
-  const { chartData, profitData, feedProduceData } = useMemo(() => {
-    const data = prepareChartData();
-    const profitData = data.map(d => ({ month: d.month, profitLoss: d.profitLoss }));
-    const feedProduceData = data.map(d => ({ month: d.month, feedKg: d.feedKg, milkL: d.milkL }));
-    
-    return {
-      chartData: data,
-      profitData,
-      feedProduceData
-    };
-  }, [sorted, selectedMonth]); // Recalculate only when these change
+  }, [sorted, milkData]); // Remove months from dependency
+
+  const profitData = useMemo(() => (
+    chartData.map(d => ({ month: d.month, profitLoss: d.profitLoss }))
+  ), [chartData]);
+
+  const feedProduceData = useMemo(() => (
+    chartData.map(d => ({ month: d.month, feedKg: d.feedKg, milkL: d.milkL }))
+  ), [chartData]);
 
   // Update current entry calculations to use milk data from daily records if available
   const getCurrEntryWithMilk = () => {
@@ -241,6 +231,26 @@ export default function AnalyticsDashboard() {
     }
   };
 
+  // Add loading check for charts
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-8 pt-20 flex items-center justify-center">
+        <span className="text-xl text-gray-600">Loading analytics...</span>
+      </div>
+    );
+  }
+
+  // When the user selects a month in the analytics form, auto-fill milkL from daily records if available
+  useEffect(() => {
+    if (form.month && milkData[form.month] !== undefined) {
+      setForm(prev => ({
+        ...prev,
+        milkL: milkData[form.month] || ""
+      }));
+    }
+    // Only run when form.month or milkData changes
+  }, [form.month, milkData]);
+
   return (
     <div className="min-h-screen bg-gray-50 p-8 pt-20">
       <h1 className="text-3xl font-bold mb-4">Analytics Dashboard</h1>
@@ -302,7 +312,7 @@ export default function AnalyticsDashboard() {
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-xl font-semibold">Feed Cost ({selectedMonth})</h2>
           <p className="text-2xl mt-2">
-            {isNaN(computedFeedCost) ? "N/A" : `${computedFeedCost} Ksh`}
+            {isNaN(computedFeedCost) ? "N/A" : `${computedFeedCost} Ksh (per kg)`}
           </p>
         </div>
 
@@ -310,7 +320,7 @@ export default function AnalyticsDashboard() {
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-xl font-semibold">Milk Revenue ({selectedMonth})</h2>
           <p className="text-2xl mt-2">
-            {isNaN(computedRevenue) ? "N/A" : `${computedRevenue} Ksh`}
+            {isNaN(milkData[selectedMonth]) ? "N/A" : `${milkData[selectedMonth]} (L)`}
           </p>
         </div>
 
@@ -350,13 +360,13 @@ export default function AnalyticsDashboard() {
       <div className="bg-white p-4 rounded-lg shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Profit/Loss Trend</h2>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={profitData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
             <Tooltip formatter={val => `${val} Ksh`} />
             <Legend />
-            <Line type="monotone" dataKey="profitLoss" stroke="#f43f5e" strokeWidth={2} dot={{ r: 4 }} />
+            <Line type="monotone" dataKey="milkL" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -379,3 +389,4 @@ export default function AnalyticsDashboard() {
     </div>
   );
 }
+

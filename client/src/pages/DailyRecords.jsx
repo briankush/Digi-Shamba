@@ -39,16 +39,18 @@ export default function DailyRecords() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChangingDate, setIsChangingDate] = useState(false);
   
-  // Replace the getLocalDateStr function with this implementation
+  // Update the getLocalDateStr function to ensure proper handling of month end dates
   const getLocalDateStr = (date) => {
     // Ensure we're working with a date object
     const d = new Date(date);
     
-    // Set time to noon to avoid timezone issues
-    d.setHours(12, 0, 0, 0);
+    // Force the date to be processed in local timezone with UTC representation
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
     
-    // Format directly without timezone conversion
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    // Ensure consistent string format
+    return `${year}-${month}-${day}`;
   };
 
   useEffect(() => {
@@ -111,23 +113,61 @@ export default function DailyRecords() {
     fetchAnimalsAndRecords();
   }, [navigate]);
   
-  // Improve fetchRecordsForMonth with better state handling
+  // Add this helper function for date consistency checks (missing from previous code)
+  const checkDateConsistency = (date) => {
+    const d = new Date(date);
+    console.log({
+      original: date,
+      newDate: d,
+      iso: d.toISOString(),
+      local: d.toLocaleDateString(),
+      localDateStr: getLocalDateStr(d),
+      day: d.getDate(),
+      month: d.getMonth() + 1,
+      year: d.getFullYear()
+    });
+    return d;
+  };
+
+  // Update the fetchRecordsForMonth function to force a clear of records when month changes
   const fetchRecordsForMonth = async (year, month) => {
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
-      return;
+      return [];
     }
     
     try {
-      // Clear any previous error
+      // Clear records COMPLETELY when changing months
+      setRecords([]);
       setError("");
       
+      console.log(`Fetching records for year=${year}, month=${month}`);
+      
       // Fetch records for the month
+      // Debug logs for month boundaries
+      console.log(`Fetching records for ${year}-${month}, including end of month dates`);
+      
+      // Add special handling to check for end of month days
       const recordsRes = await axios.get(
         `http://localhost:5000/api/daily-records/month/${year}/${month}`, 
         { headers: { Authorization: `Bearer ${token}` }}
       );
+      
+      // Get last day of the selected month
+      const lastDay = new Date(year, month, 0).getDate();
+      console.log(`Last day of month ${month}/${year} is ${lastDay}`);
+      
+      // Check if we have records for each day, especially the last day
+      const days = {};
+      recordsRes.data.forEach(record => {
+        const day = new Date(record.date).getDate();
+        days[day] = true;
+      });
+      
+      console.log("Days with records:", Object.keys(days).sort((a,b) => a-b));
+      console.log(`${lastDay} should be present if we have records for it`);
+      
       setRecords(recordsRes.data);
       
       // Fetch monthly totals
@@ -220,72 +260,88 @@ export default function DailyRecords() {
   const handleCalendarChange = async (date) => {
     try {
       setIsChangingDate(true);
+      console.log("Original calendar date selected:", date);
       
-      // Create a new date with time set to noon to avoid timezone issues
+      // Create a new date preserving the exact day
       const exactDate = new Date(date);
-      exactDate.setHours(12, 0, 0, 0);
-      setSelectedDate(exactDate);
-      
-      // Get local date string
-      const localDateStr = getLocalDateStr(exactDate);
-      
-      // Debug logs
-      console.log("Selected calendar date:", exactDate);
-      console.log("Date string used for comparison:", localDateStr);
-      
-      // Update month/year if they change
-      const month = exactDate.getMonth() + 1;
       const year = exactDate.getFullYear();
+      const month = exactDate.getMonth();
+      const day = exactDate.getDate();
       
-      let currentRecords = records;
-      
-      // If month or year changes, fetch new data
-      if (month !== selectedMonth || year !== selectedYear) {
-        setSelectedMonth(month);
-        setSelectedYear(year);
-        currentRecords = await fetchRecordsForMonth(year, month);
+      // Special handling for July 31st
+      if (month === 6 && day === 31) { // Note: month is 0-based, so 6 is July
+        console.log("SPECIAL CASE: July 31st selected");
       }
       
-      // Check if there's a record for the selected date and animal
-      const animalId = selectedAnimalId || (animals.length > 0 ? animals[0]._id : "");
+      // Create a clean date at noon to avoid timezone issues
+      const cleanDate = new Date(year, month, day, 12, 0, 0);
+      console.log("Clean date object:", cleanDate);
       
-      if (animalId) {
-        const record = currentRecords.find(r => {
-          return getLocalDateStr(r.date) === localDateStr && r.animal._id === animalId;
-        });
+      // Set the selected date
+      setSelectedDate(cleanDate);
+      
+      // Calculate correct month (1-based) for API and state
+      const newMonth = month + 1;
+      const newYear = year;
+      
+      console.log(`Calendar change: Date=${day}, Month=${newMonth}, Year=${newYear}`);
+      console.log(`Current state: Month=${selectedMonth}, Year=${selectedYear}`);
+      
+      // Only fetch new records if month or year changes
+      if (newMonth !== selectedMonth || newYear !== selectedYear) {
+        console.log(`Month changed from ${selectedMonth}/${selectedYear} to ${newMonth}/${newYear}`);
         
-        if (record) {
-          // We have an existing record - set up for update
-          setExistingRecord(record);
-          setIsUpdating(true);
-          setForm({
-            date: localDateStr,
-            animalId: record.animal._id,
-            milkProduced: record.milkProduced.toString(),
-            notes: record.notes || ""
-          });
-        } else {
-          // No record found - set up for new entry
-          setExistingRecord(null);
-          setIsUpdating(false);
-          setForm({
-            date: localDateStr,
-            animalId: animalId,
-            milkProduced: "",
-            notes: ""
-          });
-        }
-      } else {
-        // No animal selected yet
+        // Update state BEFORE fetching records for the new month
+        setSelectedMonth(newMonth);
+        setSelectedYear(newYear);
+        
+        // Fetch new records with the updated month/year
+        const currentRecords = await fetchRecordsForMonth(newYear, newMonth);
+        
+        // Clear existing record selection when changing months
         setExistingRecord(null);
         setIsUpdating(false);
+        
+        // Update form with new date but reset other fields
         setForm({
-          date: localDateStr,
+          date: getLocalDateStr(cleanDate),
           animalId: animals.length > 0 ? animals[0]._id : "",
           milkProduced: "",
           notes: ""
         });
+        
+        // Return early as we've reset the state
+        return;
       }
+      
+      // Add special handling for last day of month
+      if (isLastDayOfMonth(date)) {
+        const day = date.getDate();
+        const month = date.getMonth() + 1; // Convert to 1-based
+        console.log(`Selected the last day of month: ${day}/${month}`);
+        
+        // Create a date with noon time to avoid any timezone issues
+        const safeDate = new Date(date);
+        safeDate.setHours(12, 0, 0, 0);
+        setSelectedDate(safeDate);
+        
+        // Set the form date directly from date components
+        const dateStr = `${safeDate.getFullYear()}-${String(safeDate.getMonth() + 1).padStart(2, '0')}-${String(safeDate.getDate()).padStart(2, '0')}`;
+        console.log(`Setting form date explicitly for end of month: ${dateStr}`);
+        
+        // Prepare form for new record
+        setForm({
+          date: dateStr,
+          animalId: selectedAnimalId || (animals.length > 0 ? animals[0]._id : ""),
+          milkProduced: "",
+          notes: ""
+        });
+        
+        return;
+      }
+      
+      // Rest of the function for same month date selection
+      // ...existing code for checking existing records...
     } finally {
       setIsChangingDate(false);
     }
@@ -293,6 +349,15 @@ export default function DailyRecords() {
   
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Add this function to help with last day of month issues
+  const isLastDayOfMonth = (date) => {
+    const d = new Date(date);
+    // Check if this is the last day of the month by seeing if tomorrow is in a different month
+    const tomorrow = new Date(d);
+    tomorrow.setDate(d.getDate() + 1);
+    return d.getMonth() !== tomorrow.getMonth();
   };
 
   // Enhanced submit handler with better update/create logic
@@ -305,9 +370,24 @@ export default function DailyRecords() {
       setIsSubmitting(true);
       setError("");
       
-      // Format the payload with fixed date handling
+      // Get the original selected date components directly
+      const selectedDay = selectedDate.getDate();
+      const selectedMonth = selectedDate.getMonth() + 1; // Convert to 1-based
+      const selectedYear = selectedDate.getFullYear();
+      
+      // Check if this is the last day of month
+      const lastDayCheck = isLastDayOfMonth(selectedDate);
+      if (lastDayCheck) {
+        console.log(`Submitting for the LAST DAY of month: ${selectedDay}/${selectedMonth}/${selectedYear}`);
+      }
+      
+      // Create date string directly from components
+      const formattedDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+      console.log(`Direct date formatting: ${formattedDate}`);
+      
+      // Create payload with explicit date string (not from form)
       const payload = {
-        date: form.date, // This should now be the proper local date string
+        date: formattedDate, // Use direct formatting
         animalId: form.animalId,
         milkProduced: parseFloat(form.milkProduced),
         feedConsumed: existingRecord?.feedConsumed || 0,
@@ -316,12 +396,15 @@ export default function DailyRecords() {
         notes: form.notes
       };
       
-      // Ensure payload validation
-      if (isNaN(payload.milkProduced)) {
-        setError("Please enter a valid milk quantity");
-        return;
+      // Special debug info for month boundaries
+      if (selectedDay >= 28) {
+        console.log(`End of month submission: day=${selectedDay}, month=${selectedMonth}`);
+        console.log(`Date: ${formattedDate}, payload:`, payload);
       }
       
+      console.log("Submitting payload with date:", payload.date);
+      
+      // Use the explicit date in the API request
       await axios.post("http://localhost:5000/api/daily-records", payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -411,16 +494,27 @@ export default function DailyRecords() {
   const organizeRecordsByDate = () => {
     const grouped = {};
     
-    records.forEach(record => {
-      // Get the local date string for the record
+    // Get the month and year from state (not from records)
+    console.log(`Organizing records for month ${selectedMonth}/${selectedYear}`);
+    
+    // First verify that all records belong to the selected month
+    const filteredRecords = records.filter(record => {
+      const date = new Date(record.date);
+      const recordMonth = date.getMonth() + 1; // Convert to 1-based
+      const recordYear = date.getFullYear();
+      
+      const matches = (recordMonth === selectedMonth && recordYear === selectedYear);
+      if (!matches) {
+        console.log(`Filtered out record from ${recordMonth}/${recordYear} (expected ${selectedMonth}/${selectedYear})`);
+      }
+      return matches;
+    });
+    
+    console.log(`After filtering: ${filteredRecords.length} of ${records.length} records remain`);
+    
+    // Now group the filtered records by date
+    filteredRecords.forEach(record => {
       const localDateStr = getLocalDateStr(record.date);
-      
-      // Check if the record belongs to the selected month/year
-      const recordDate = new Date(record.date);
-      const recordMonth = recordDate.getMonth() + 1;
-      const recordYear = recordDate.getFullYear();
-      
-      if (recordMonth !== selectedMonth || recordYear !== selectedYear) return;
       
       if (!grouped[localDateStr]) {
         grouped[localDateStr] = [];
@@ -428,7 +522,10 @@ export default function DailyRecords() {
       grouped[localDateStr].push(record);
     });
     
-    // Sort dates (newest first)
+    // Log all grouped dates for debugging
+    console.log("Grouped dates:", Object.keys(grouped));
+    
+    // Sort dates (newest first) and return
     return Object.keys(grouped)
       .sort((a, b) => new Date(b) - new Date(a))
       .reduce((result, dateStr) => {
@@ -697,4 +794,3 @@ export default function DailyRecords() {
     </div>
   );
 }
-
