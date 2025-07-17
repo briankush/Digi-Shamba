@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend
 } from "recharts";
+import { FaCalendarAlt } from "react-icons/fa";
 
 export default function AnalyticsDashboard() {
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -12,6 +13,7 @@ export default function AnalyticsDashboard() {
   const [form, setForm] = useState({ month: "", feedKg: "", milkL: "", feedCost: "", produceValue: "" });
   const [error, setError] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(months[0]);
+  const [milkData, setMilkData] = useState({});
   const navigate = useNavigate();
 
   // Normalize month to "Jan", "Feb", etc.
@@ -21,32 +23,56 @@ export default function AnalyticsDashboard() {
   };
 
   // Fetch data
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     const token = localStorage.getItem("token");
     if (!token) return navigate("/login");
+    
     try {
+      // Fetch analytics data
       const res = await axios.get("http://localhost:5000/api/analytics", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const cleaned = res.data.map(e => ({
-        ...e,
-        month: normalizeMonth(e.month)
-      }));
-      setEntries(cleaned);
+      setEntries(res.data);
+      
+      // Fetch milk data from daily records for all available months
+      const currentYear = new Date().getFullYear();
+      const monthlyMilkData = {};
+      
+      // Fetch milk data for each month of current year
+      for (let month = 1; month <= 12; month++) {
+        try {
+          const milkRes = await axios.get(
+            `http://localhost:5000/api/daily-records/monthly-totals/${currentYear}/${month}`,
+            { headers: { Authorization: `Bearer ${token}` }}
+          );
+          
+          if (milkRes.data && milkRes.data.totalMilk) {
+            // Store milk data by month abbreviation (Jan, Feb, etc.)
+            const monthName = months[month - 1];
+            monthlyMilkData[monthName] = milkRes.data.totalMilk;
+          }
+        } catch (e) {
+          console.log(`No milk data for month ${month}`);
+        }
+      }
+      
+      setMilkData(monthlyMilkData);
     } catch (err) {
       console.error("GET /api/analytics error:", err.response || err);
       setError("Failed to load analytics");
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   // Sort entries by month
-  const sorted = [...entries].sort((a, b) =>
-    months.indexOf(a.month) - months.indexOf(b.month)
-  );
+  const sorted = useMemo(() => {
+    return [...entries].sort((a, b) =>
+      months.indexOf(a.month) - months.indexOf(b.month)
+    );
+  }, [entries, months]);
 
   // Current & Previous entries
   const currEntry = sorted.find(e => e.month === selectedMonth) || {};
@@ -70,8 +96,12 @@ export default function AnalyticsDashboard() {
   } = currEntry;
 
   const computedFeedCost = tfc != null ? tfc : cfk * cpc;
-  const computedRevenue = tpr != null ? tpr : cml * cpp;
-  const computedProfit = tpl != null ? tpl : computedRevenue - computedFeedCost;
+  const computedRevenue = currEntry.totalProduceRevenue != null 
+    ? currEntry.totalProduceRevenue 
+    : (cml || 0) * (cpp || 0);
+  const computedProfit = tpl != null 
+    ? tpl 
+    : computedRevenue - computedFeedCost;
 
   // Previous calculations
   const {
@@ -89,16 +119,87 @@ export default function AnalyticsDashboard() {
   const sign = diff >= 0 ? "+" : "-";
   const diffColor = diff >= 0 ? "text-green-600" : "text-red-600";
 
-  const profitData = sorted.map(e => ({
-    month: e.month,
-    profitLoss: e.profitLoss != null ? e.profitLoss : (e.milkL * e.produceValue) - (e.feedKg * e.feedCost)
-  }));
+  // Modify chart data preparation to include milk data from daily records
+  const prepareChartData = () => {
+    const chartData = months.map(m => {
+      const entry = sorted.find(e => e.month === m) || {};
+      
+      // Use milk data from daily records if available, otherwise use analytics data
+      const milkAmount = milkData[m] !== undefined ? milkData[m] : (entry.milkL || 0);
+      
+      return {
+        month: m,
+        feedKg: entry.feedKg || 0,
+        milkL: milkAmount,
+        profitLoss: entry.profitLoss !== undefined ? entry.profitLoss : 0
+      };
+    });
+    
+    return chartData;
+  };
+  
+  const { chartData, profitData, feedProduceData } = useMemo(() => {
+    const data = prepareChartData();
+    const profitData = data.map(d => ({ month: d.month, profitLoss: d.profitLoss }));
+    const feedProduceData = data.map(d => ({ month: d.month, feedKg: d.feedKg, milkL: d.milkL }));
+    
+    return {
+      chartData: data,
+      profitData,
+      feedProduceData
+    };
+  }, [sorted, selectedMonth]); // Recalculate only when these change
 
-  const feedProduceData = sorted.map(e => ({
-    month: e.month,
-    feedKg: e.feedKg,
-    milkL: e.milkL
-  }));
+  // Update current entry calculations to use milk data from daily records if available
+  const getCurrEntryWithMilk = () => {
+    const currEntry = sorted.find(e => e.month === selectedMonth) || {};
+    
+    // If we have milk data for this month from daily records, use it
+    if (milkData[selectedMonth] !== undefined) {
+      return {
+        ...currEntry,
+        milkL: milkData[selectedMonth],
+        // Also recalculate the revenue if we have milk value information
+        totalProduceRevenue: milkData[selectedMonth] * (currEntry.produceValue || 0)
+      };
+    }
+    
+    return currEntry;
+  };
+  
+  // Get updated current entry with milk data
+  const currEntryWithMilk = getCurrEntryWithMilk();
+  
+  // Current calculations
+  const {
+    feedKg: cfk2 = 0,
+    feedCost: cpc2 = 0,
+    milkL: cml2 = 0,
+    produceValue: cpp2 = 0,
+    totalFeedCost: tfc2,
+    totalProduceRevenue: tpr2,
+    profitLoss: tpl2
+  } = currEntryWithMilk;
+
+  const computedFeedCost2 = tfc2 != null ? tfc2 : cfk2 * cpc2;
+  const computedRevenue2 = tpr2 != null ? tpr2 : cml2 * cpp2;
+  const computedProfit2 = tpl2 != null ? tpl2 : computedRevenue2 - computedFeedCost2;
+
+  // Previous calculations
+  const {
+    feedKg: pfk2 = 0,
+    feedCost: ppc2 = 0,
+    milkL: pml2 = 0,
+    produceValue: ppp2 = 0,
+    profitLoss: ppl2
+  } = prevEntry;
+
+  const prevProfit2 = ppl2 != null ? ppl2 : (pml2 * ppp2) - (pfk2 * ppc2);
+
+  // Difference
+  const diff2 = computedProfit2 - prevProfit2;
+  const sign2 = diff2 >= 0 ? "+" : "-";
+  const diffColor2 = diff2 >= 0 ? "text-green-600" : "text-red-600";
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -233,6 +334,16 @@ export default function AnalyticsDashboard() {
             {isNaN(diff) ? "N/A" : `${sign}${Math.abs(diff)} Ksh`}
           </p>
         </div>
+      </div>
+
+      {/* Add button to navigate to daily records */}
+      <div className="mb-6 text-right">
+        <button
+          onClick={() => navigate("/daily-records")}
+          className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 inline-flex items-center gap-2"
+        >
+          <FaCalendarAlt /> View Daily Records
+        </button>
       </div>
 
       {/* Line Chart */}

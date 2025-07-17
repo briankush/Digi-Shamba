@@ -145,3 +145,38 @@ exports.getAnimalsWithLatestRecords = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+// Delete a record
+exports.deleteRecord = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // First check if the record exists and belongs to this user
+    const record = await DailyRecord.findOne({ 
+      _id: id,
+      owner: req.user.id 
+    });
+    
+    if (!record) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Record not found or you don't have permission to delete it" 
+      });
+    }
+    
+    // Delete the record
+    await DailyRecord.findByIdAndDelete(id);
+    
+    res.json({ 
+      success: true,
+      message: "Record deleted successfully" 
+    });
+  } catch (err) {
+    console.error('Error deleting record:', err);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error while deleting record", 
+      error: err.message 
+    });
+  }
+};

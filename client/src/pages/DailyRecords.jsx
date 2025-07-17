@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaCalendarAlt, FaTint, FaChartLine } from "react-icons/fa";
+import { FaCalendarAlt, FaTint, FaChartLine, FaTrash, FaEdit, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { GiCow } from "react-icons/gi";
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -29,103 +29,265 @@ export default function DailyRecords() {
     notes: ""
   });
 
+  // Add a new state to track if we're updating
+  const [isUpdating, setIsUpdating] = useState(false);
+  // Add state for selected animal in form
+  const [selectedAnimalId, setSelectedAnimalId] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // Add state for delete confirmation
+  const [expandedDates, setExpandedDates] = useState({}); // Add state for expanded dates
+  // Add state to track loading state for different operations
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isChangingDate, setIsChangingDate] = useState(false);
+  
+  // Replace the getLocalDateStr function with this implementation
+  const getLocalDateStr = (date) => {
+    // Ensure we're working with a date object
+    const d = new Date(date);
+    
+    // Set time to noon to avoid timezone issues
+    d.setHours(12, 0, 0, 0);
+    
+    // Format directly without timezone conversion
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
   useEffect(() => {
     const fetchAnimalsAndRecords = async () => {
+      // Check for token before making requests
       const token = localStorage.getItem("token");
-      if (!token) return navigate("/login");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
       
       try {
         setLoading(true);
+        setError("");
         
-        // Fetch animals
-        const animalRes = await axios.get("http://localhost:5000/api/farm-animals", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        // Only include cows
-        const cows = animalRes.data.filter(animal => animal.type.toLowerCase() === "cow" || animal.type.toLowerCase() === "cows");
-        setAnimals(cows);
-        
-        if (cows.length > 0) {
-          setForm(prev => ({ ...prev, animalId: cows[0]._id }));
+        // Fetch animals with proper error handling
+        try {
+          const animalRes = await axios.get("http://localhost:5000/api/farm-animals", {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          // Only include cows
+          const cows = animalRes.data.filter(animal => 
+            animal.type?.toLowerCase() === "cow" || 
+            animal.type?.toLowerCase() === "cows"
+          );
+          
+          setAnimals(cows);
+          
+          if (cows.length > 0) {
+            setForm(prev => ({ ...prev, animalId: cows[0]._id }));
+          }
+        } catch (err) {
+          console.error("Error fetching animals:", err);
+          if (err.response?.status === 401) {
+            // Handle expired token
+            localStorage.removeItem("token");
+            navigate("/login");
+            return;
+          }
+          setError("Failed to load animals");
         }
         
         // Fetch records for current month
-        await fetchRecordsForMonth(selectedYear, selectedMonth);
+        try {
+          await fetchRecordsForMonth(selectedYear, selectedMonth);
+        } catch (err) {
+          console.error("Error fetching records:", err);
+          setError("Failed to load records");
+        }
         
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Failed to load animals or records");
+        console.error("Error in fetch operation:", err);
         setLoading(false);
+        setError("Failed to load data");
       }
     };
     
     fetchAnimalsAndRecords();
   }, [navigate]);
   
-  useEffect(() => {
-    // When the selected date changes, check if there's an existing record
-    if (records.length > 0 && selectedDate) {
-      const dateStr = selectedDate.toISOString().split('T')[0];
-      const record = records.find(r => new Date(r.date).toISOString().split('T')[0] === dateStr);
+  // Improve fetchRecordsForMonth with better state handling
+  const fetchRecordsForMonth = async (year, month) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    
+    try {
+      // Clear any previous error
+      setError("");
       
-      if (record) {
-        setExistingRecord(record);
-        // Pre-fill the form with existing data
-        setForm({
-          date: dateStr,
-          animalId: record.animal._id,
-          milkProduced: record.milkProduced.toString(),
-          notes: record.notes || ""
+      // Fetch records for the month
+      const recordsRes = await axios.get(
+        `http://localhost:5000/api/daily-records/month/${year}/${month}`, 
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
+      setRecords(recordsRes.data);
+      
+      // Fetch monthly totals
+      try {
+        const totalsRes = await axios.get(
+          `http://localhost:5000/api/daily-records/monthly-totals/${year}/${month}`,
+          { headers: { Authorization: `Bearer ${token}` }}
+        );
+        setMonthlyTotal(totalsRes.data);
+      } catch (err) {
+        // If monthly totals fails, just log the error but don't block the UI
+        console.warn("Could not fetch monthly totals:", err);
+        setMonthlyTotal(null);
+      }
+      
+      return recordsRes.data;
+    } catch (err) {
+      console.error("Error fetching records:", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+        return [];
+      }
+      setError("Failed to load records. Please try again.");
+      return [];
+    }
+  };
+  
+  useEffect(() => {
+    // When the selected date changes, reset the form
+    if (selectedDate) {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      
+      // Reset form for new entry, don't pre-fill with existing data
+      setForm({
+        date: dateStr,
+        animalId: selectedAnimalId || (animals.length > 0 ? animals[0]._id : ""),
+        milkProduced: "",
+        notes: ""
+      });
+      
+      // Find any records for this date to highlight in the table
+      setExistingRecord(null);
+    }
+  }, [selectedDate, animals, selectedAnimalId]);
+  
+  // Check for existing record with fixed date handling
+  const checkForExistingRecord = (animalId, date) => {
+    if (!animalId || !date || !records.length) return null;
+    
+    const localDateStr = getLocalDateStr(date);
+    return records.find(r => {
+      const recordDateStr = getLocalDateStr(r.date);
+      return recordDateStr === localDateStr && r.animal._id === animalId;
+    });
+  };
+  
+  // Updated animal selection handler
+  const handleAnimalChange = (e) => {
+    const animalId = e.target.value;
+    setSelectedAnimalId(animalId);
+    
+    if (!selectedDate) return;
+    
+    const existingRecord = checkForExistingRecord(animalId, selectedDate);
+    if (existingRecord) {
+      // We found a record for this date and animal - prepare for update
+      setExistingRecord(existingRecord);
+      setIsUpdating(true);
+      setForm({
+        date: getLocalDateStr(selectedDate), // Use local date string
+        animalId: existingRecord.animal._id,
+        milkProduced: existingRecord.milkProduced.toString(),
+        notes: existingRecord.notes || ""
+      });
+    } else {
+      // No record found - prepare for new entry
+      setExistingRecord(null);
+      setIsUpdating(false);
+      setForm({
+        date: getLocalDateStr(selectedDate), // Use local date string
+        animalId,
+        milkProduced: "",
+        notes: ""
+      });
+    }
+  };
+  
+  // Fixed calendar change handler
+  const handleCalendarChange = async (date) => {
+    try {
+      setIsChangingDate(true);
+      
+      // Create a new date with time set to noon to avoid timezone issues
+      const exactDate = new Date(date);
+      exactDate.setHours(12, 0, 0, 0);
+      setSelectedDate(exactDate);
+      
+      // Get local date string
+      const localDateStr = getLocalDateStr(exactDate);
+      
+      // Debug logs
+      console.log("Selected calendar date:", exactDate);
+      console.log("Date string used for comparison:", localDateStr);
+      
+      // Update month/year if they change
+      const month = exactDate.getMonth() + 1;
+      const year = exactDate.getFullYear();
+      
+      let currentRecords = records;
+      
+      // If month or year changes, fetch new data
+      if (month !== selectedMonth || year !== selectedYear) {
+        setSelectedMonth(month);
+        setSelectedYear(year);
+        currentRecords = await fetchRecordsForMonth(year, month);
+      }
+      
+      // Check if there's a record for the selected date and animal
+      const animalId = selectedAnimalId || (animals.length > 0 ? animals[0]._id : "");
+      
+      if (animalId) {
+        const record = currentRecords.find(r => {
+          return getLocalDateStr(r.date) === localDateStr && r.animal._id === animalId;
         });
+        
+        if (record) {
+          // We have an existing record - set up for update
+          setExistingRecord(record);
+          setIsUpdating(true);
+          setForm({
+            date: localDateStr,
+            animalId: record.animal._id,
+            milkProduced: record.milkProduced.toString(),
+            notes: record.notes || ""
+          });
+        } else {
+          // No record found - set up for new entry
+          setExistingRecord(null);
+          setIsUpdating(false);
+          setForm({
+            date: localDateStr,
+            animalId: animalId,
+            milkProduced: "",
+            notes: ""
+          });
+        }
       } else {
+        // No animal selected yet
         setExistingRecord(null);
-        // Reset form but keep the selected date and animal
+        setIsUpdating(false);
         setForm({
-          date: dateStr,
-          animalId: form.animalId,
+          date: localDateStr,
+          animalId: animals.length > 0 ? animals[0]._id : "",
           milkProduced: "",
           notes: ""
         });
       }
-    }
-  }, [selectedDate, records]);
-  
-  const fetchRecordsForMonth = async (year, month) => {
-    const token = localStorage.getItem("token");
-    try {
-      // Fetch records for the month
-      const recordsRes = await axios.get(`http://localhost:5000/api/daily-records/month/${year}/${month}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setRecords(recordsRes.data);
-      
-      // Fetch monthly totals
-      const totalsRes = await axios.get(`http://localhost:5000/api/daily-records/monthly-totals/${year}/${month}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setMonthlyTotal(totalsRes.data);
-    } catch (err) {
-      console.error("Error fetching records:", err);
-      setError("Failed to load records for the month");
-    }
-  };
-
-  const handleCalendarChange = (date) => {
-    setSelectedDate(date);
-    // Format date for form
-    const dateStr = date.toISOString().split('T')[0];
-    setForm(prev => ({ ...prev, date: dateStr }));
-    
-    // Update month/year if they change
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear();
-    
-    if (month !== selectedMonth || year !== selectedYear) {
-      setSelectedMonth(month);
-      setSelectedYear(year);
-      fetchRecordsForMonth(year, month);
+    } finally {
+      setIsChangingDate(false);
     }
   };
   
@@ -133,40 +295,83 @@ export default function DailyRecords() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Enhanced submit handler with better update/create logic
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
+    if (!token) return navigate("/login");
     
     try {
-      // Simplified payload with just milk production data
+      setIsSubmitting(true);
+      setError("");
+      
+      // Format the payload with fixed date handling
       const payload = {
-        date: form.date,
+        date: form.date, // This should now be the proper local date string
         animalId: form.animalId,
         milkProduced: parseFloat(form.milkProduced),
-        // Default values for feed-related fields (will be handled in analytics)
-        feedConsumed: 0,
-        feedCostPerKg: 0,
-        milkValuePerLiter: 0,
+        feedConsumed: existingRecord?.feedConsumed || 0,
+        feedCostPerKg: existingRecord?.feedCostPerKg || 0,
+        milkValuePerLiter: existingRecord?.milkValuePerLiter || 0,
         notes: form.notes
       };
+      
+      // Ensure payload validation
+      if (isNaN(payload.milkProduced)) {
+        setError("Please enter a valid milk quantity");
+        return;
+      }
       
       await axios.post("http://localhost:5000/api/daily-records", payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Reset form except for date and animal
+      // Clear the form and refresh data
       setForm({
         ...form,
         milkProduced: "",
         notes: ""
       });
       
-      // Refresh records
-      fetchRecordsForMonth(selectedYear, selectedMonth);
+      // Reset state and refresh records
+      setIsUpdating(false);
+      await fetchRecordsForMonth(selectedYear, selectedMonth);
       
     } catch (err) {
       console.error("Error saving record:", err);
-      setError("Failed to save daily record");
+      setError(err.response?.data?.message || "Failed to save record. Please check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteRecord = async (recordId) => {
+    const token = localStorage.getItem("token");
+    if (!token) return navigate("/login");
+    
+    try {
+      await axios.delete(`http://localhost:5000/api/daily-records/${recordId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Refresh records after deletion
+      await fetchRecordsForMonth(selectedYear, selectedMonth);
+      
+      // Reset states
+      setDeleteConfirm(null);
+      if (existingRecord && existingRecord._id === recordId) {
+        setExistingRecord(null);
+        setIsUpdating(false);
+        setForm({
+          date: selectedDate.toISOString().split('T')[0],
+          animalId: form.animalId,
+          milkProduced: "",
+          notes: ""
+        });
+      }
+    } catch (err) {
+      console.error("Error deleting record:", err);
+      setError("Failed to delete record");
     }
   };
 
@@ -178,12 +383,74 @@ export default function DailyRecords() {
   // Function to highlight days with records
   const tileClassName = ({ date, view }) => {
     if (view === 'month') {
-      const dateStr = date.toISOString().split('T')[0];
-      const hasRecord = records.some(r => new Date(r.date).toISOString().split('T')[0] === dateStr);
+      const localDateStr = getLocalDateStr(date);
+      const hasRecord = records.some(r => getLocalDateStr(r.date) === localDateStr);
       return hasRecord ? 'has-record' : null;
     }
   };
 
+  // Group records by date for the UI
+  const recordsByDate = {};
+  records.forEach(record => {
+    const dateStr = new Date(record.date).toISOString().split('T')[0];
+    if (!recordsByDate[dateStr]) {
+      recordsByDate[dateStr] = [];
+    }
+    recordsByDate[dateStr].push(record);
+  });
+
+  // Function to toggle expanded state for a date
+  const toggleDateExpand = (dateStr) => {
+    setExpandedDates(prev => ({
+      ...prev,
+      [dateStr]: !prev[dateStr]
+    }));
+  };
+  
+  // Group records by date
+  const organizeRecordsByDate = () => {
+    const grouped = {};
+    
+    records.forEach(record => {
+      // Get the local date string for the record
+      const localDateStr = getLocalDateStr(record.date);
+      
+      // Check if the record belongs to the selected month/year
+      const recordDate = new Date(record.date);
+      const recordMonth = recordDate.getMonth() + 1;
+      const recordYear = recordDate.getFullYear();
+      
+      if (recordMonth !== selectedMonth || recordYear !== selectedYear) return;
+      
+      if (!grouped[localDateStr]) {
+        grouped[localDateStr] = [];
+      }
+      grouped[localDateStr].push(record);
+    });
+    
+    // Sort dates (newest first)
+    return Object.keys(grouped)
+      .sort((a, b) => new Date(b) - new Date(a))
+      .reduce((result, dateStr) => {
+        result[dateStr] = grouped[dateStr];
+        return result;
+      }, {});
+  };
+  
+  // When selected date changes, automatically expand it
+  useEffect(() => {
+    if (selectedDate) {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      setExpandedDates(prev => ({
+        ...prev,
+        [dateStr]: true
+      }));
+    }
+  }, [selectedDate]);
+  
+  const recordsGroupedByDate = organizeRecordsByDate();
+  const hasRecords = Object.keys(recordsGroupedByDate).length > 0;
+  
   if (loading) return <div className="min-h-screen pt-20 flex justify-center items-center">Loading...</div>;
 
   return (
@@ -256,7 +523,7 @@ export default function DailyRecords() {
             <div className="bg-white p-6 rounded-lg shadow mb-8">
               <h2 className="text-xl font-semibold mb-4 flex items-center">
                 <GiCow className="mr-2 text-amber-700" /> 
-                {existingRecord ? 'Edit Record' : 'Add Record'} for {formatDate(selectedDate)}
+                {isUpdating ? 'Update Record' : 'Add New Record'} for {formatDate(selectedDate)}
               </h2>
               
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -266,8 +533,11 @@ export default function DailyRecords() {
                     <select
                       name="animalId"
                       value={form.animalId}
-                      onChange={handleChange}
-                      className="w-full border rounded-md px-3 py-2"
+                      onChange={(e) => {
+                        handleChange(e);
+                        handleAnimalChange(e);
+                      }}
+                      className={`w-full border rounded-md px-3 py-2 ${isUpdating ? 'bg-gray-100' : ''}`}
                       required
                     >
                       <option value="">Select animal</option>
@@ -275,6 +545,11 @@ export default function DailyRecords() {
                         <option key={animal._id} value={animal._id}>{animal.name}</option>
                       ))}
                     </select>
+                    {isUpdating && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        Updating existing record
+                      </p>
+                    )}
                   </div>
                   
                   <div>
@@ -306,12 +581,15 @@ export default function DailyRecords() {
                 <div className="flex items-center justify-between">
                   <button
                     type="submit"
-                    className="bg-green-600 text-white font-medium py-2 px-4 rounded-md hover:bg-green-700"
+                    disabled={isSubmitting}
+                    className={`text-white font-medium py-2 px-4 rounded-md flex items-center gap-2 ${
+                      isUpdating ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700'
+                    } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {existingRecord ? 'Update Record' : 'Save Record'}
+                    {isSubmitting ? 'Saving...' : (isUpdating ? <><FaEdit /> Update Record</> : 'Save New Record')}
                   </button>
                   
-                  {/* Analytics button - moved here */}
+                  {/* Analytics button */}
                   <button 
                     type="button"
                     onClick={() => navigate("/analytics")}
@@ -324,44 +602,93 @@ export default function DailyRecords() {
             </div>
           )}
           
-          {/* Records Table */}
+          {/* Consolidated Records Display - SINGLE CARD FOR ALL RECORDS */}
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">
               Records for {new Date(selectedYear, selectedMonth-1, 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
             </h2>
             
-            {records.length === 0 ? (
+            {!hasRecords ? (
               <p className="text-gray-500">No records found for this month.</p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border px-4 py-2 text-left">Date</th>
-                      <th className="border px-4 py-2 text-left">Animal</th>
-                      <th className="border px-4 py-2 text-right">Milk (L)</th>
-                      <th className="border px-4 py-2 text-left">Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {records.map(record => (
-                      <tr 
-                        key={record._id} 
-                        className={`hover:bg-gray-50 cursor-pointer ${
-                          selectedDate && new Date(record.date).toISOString().split('T')[0] === selectedDate.toISOString().split('T')[0]
-                            ? 'bg-green-50'
-                            : ''
-                        }`}
-                        onClick={() => handleCalendarChange(new Date(record.date))}
+              <div className="space-y-3">
+                {Object.entries(recordsGroupedByDate).map(([dateStr, dateRecords]) => {
+                  const date = new Date(dateStr);
+                  const isSelectedDate = selectedDate && 
+                    getLocalDateStr(date) === getLocalDateStr(selectedDate);
+                  const isExpanded = expandedDates[dateStr] || isSelectedDate;
+                  
+                  return (
+                    <div key={dateStr} className={`border-b last:border-b-0 pb-3 ${isSelectedDate ? 'bg-green-50/30' : ''}`}>
+                      {/* Date Header (Clickable) */}
+                      <div 
+                        className={`flex justify-between items-center py-2 cursor-pointer rounded-t
+                          ${isSelectedDate ? 'font-semibold text-green-800' : ''}`}
+                        onClick={() => toggleDateExpand(dateStr)}
                       >
-                        <td className="border px-4 py-2">{formatDate(record.date)}</td>
-                        <td className="border px-4 py-2">{record.animal.name}</td>
-                        <td className="border px-4 py-2 text-right">{record.milkProduced.toFixed(1)}</td>
-                        <td className="border px-4 py-2">{record.notes || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        <div className="flex items-center">
+                          <span className="font-medium">
+                            {formatDate(date)}
+                            <span className="ml-2 text-sm text-gray-500">
+                              ({dateRecords.length} record{dateRecords.length !== 1 ? 's' : ''})
+                            </span>
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-sm text-gray-500 mr-3">
+                            Total: {dateRecords.reduce((sum, r) => sum + r.milkProduced, 0).toFixed(1)} L
+                          </span>
+                          {isExpanded ? <FaChevronUp className="text-gray-500" /> : <FaChevronDown className="text-gray-500" />}
+                        </div>
+                      </div>
+                      
+                      {/* Records for this date */}
+                      {isExpanded && (
+                        <div className="pt-2">
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="bg-gray-50">
+                                <th className="border px-3 py-2 text-left">Animal</th>
+                                <th className="border px-3 py-2 text-right">Milk (L)</th>
+                                <th className="border px-3 py-2 text-left">Notes</th>
+                                <th className="border px-3 py-2 text-center w-16">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {dateRecords.map(record => (
+                                <tr 
+                                  key={record._id} 
+                                  className={`hover:bg-gray-50 ${
+                                    isSelectedDate && record.animal._id === form.animalId 
+                                      ? 'bg-green-50' 
+                                      : ''
+                                  }`}
+                                >
+                                  <td className="border px-3 py-2">{record.animal.name}</td>
+                                  <td className="border px-3 py-2 text-right">{record.milkProduced.toFixed(1)}</td>
+                                  <td className="border px-3 py-2">{record.notes || '-'}</td>
+                                  <td className="border px-3 py-2 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        handleCalendarChange(date);
+                                        handleAnimalChange({ target: { value: record.animal._id } });
+                                      }}
+                                      className="text-blue-600 hover:text-blue-800"
+                                      title="Edit this record"
+                                    >
+                                      <FaEdit />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { createRecord, getRecordsByMonth, getMonthlyTotals, getAnimalsWithLatestRecords } = require("../controllers/dailyRecordController");
+const { createRecord, getRecordsByMonth, getMonthlyTotals, getAnimalsWithLatestRecords, deleteRecord } = require("../controllers/dailyRecordController");
 const { protect } = require("../middleware/auth");
 
 // All routes require authentication
@@ -17,5 +17,8 @@ router.get("/monthly-totals/:year/:month", getMonthlyTotals);
 
 // Get all animals with their latest records
 router.get("/animals-with-records", getAnimalsWithLatestRecords);
+
+// Delete a record by ID
+router.delete("/:id", deleteRecord);
 
 module.exports = router;
