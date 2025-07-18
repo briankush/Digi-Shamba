@@ -16,6 +16,7 @@ import Navbar from "../components/Navbar";
 import cowImage from "../Images/cows.jfif";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
 
 function LandingPage() {
   const navigate = useNavigate();

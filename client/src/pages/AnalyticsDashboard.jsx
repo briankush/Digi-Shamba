@@ -312,7 +312,7 @@ export default function AnalyticsDashboard() {
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-xl font-semibold">Feed Cost ({selectedMonth})</h2>
           <p className="text-2xl mt-2">
-            {isNaN(computedFeedCost) ? "N/A" : `${computedFeedCost} Ksh (per kg)`}
+            {isNaN(computedFeedCost2) ? "N/A" : `${computedFeedCost2} Ksh`}
           </p>
         </div>
 
@@ -324,24 +324,27 @@ export default function AnalyticsDashboard() {
           </p>
         </div>
 
-        {/* Total Profit/Loss - RENAMED */}
+        {/* Amount Made */}
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-xl font-semibold">Amount Made ({selectedMonth})</h2>
-          <p className={`text-2xl mt-2 ${computedProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
-            {isNaN(computedProfit) ? "N/A" : `${computedProfit >= 0 ? "+" : ""}${computedProfit} Ksh`}
+          <p className={`text-2xl mt-2 ${computedProfit2 >= 0 ? "text-green-600" : "text-red-600"}`}>
+            {isNaN(computedProfit2)
+              ? "N/A"
+              : `${computedProfit2 >= 0 ? "+" : ""}${computedProfit2} Ksh`}
           </p>
         </div>
 
-        {/* Profit/Loss Comparison - updated title */}
+        {/* Profit/Loss Comparison */}
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-xl font-semibold">
             Change from {prevMonthName} (Profit/Loss)
           </h2>
           <p className="text-sm mt-2 text-gray-500">
-            {selectedMonth}: {isNaN(computedProfit) ? "N/A" : `${computedProfit} Ksh`} - {prevMonthName}: {isNaN(prevProfit) ? "N/A" : `${prevProfit} Ksh`}
+            {selectedMonth}: {isNaN(computedProfit2) ? "N/A" : `${computedProfit2} Ksh`} -{" "}
+            {prevMonthName}: {isNaN(prevProfit2) ? "N/A" : `${prevProfit2} Ksh`}
           </p>
-          <p className={`text-2xl font-bold mt-1 ${diffColor}`}>
-            {isNaN(diff) ? "N/A" : `${sign}${Math.abs(diff)} Ksh`}
+          <p className={`text-2xl font-bold mt-1 ${diffColor2}`}>
+            {isNaN(diff2) ? "N/A" : `${sign2}${Math.abs(diff2)} Ksh`}
           </p>
         </div>
       </div>
