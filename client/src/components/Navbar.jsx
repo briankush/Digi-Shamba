@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AiOutlineHome, AiOutlineDashboard, AiOutlinePlus, AiOutlineLogin, AiOutlineLogout, AiOutlineUser, AiOutlineBarChart, AiOutlineCalendar } from "react-icons/ai";
+import {
+  AiOutlineHome,
+  AiOutlineBarChart,
+  AiOutlineCalendar,
+  AiOutlineLogin,
+  AiOutlineUserAdd,
+  AiOutlineLogout
+} from "react-icons/ai";
 import { FaBars, FaTimes } from "react-icons/fa";
 
 export default function Navbar() {
@@ -18,70 +25,117 @@ export default function Navbar() {
     navigate("/");
   };
 
-  const isAdmin = localStorage.getItem("userRole") === "Admin";
+  const navBg = "bg-green-600";
+  const textColor = "text-white";
 
-  const links = [
-    { to: "/", label: "Home" },
-    { to: "/analytics", label: "Analytics" },
-    { to: "/daily-records", label: "Daily Records" },
-    { to: "/login", label: "Login" },
-    { to: "/signup", label: "Sign Up" },
+  const mainLinks = [
+    { to: "/", label: "Home", icon: <AiOutlineHome /> },
+    { to: "/analytics", label: "Analytics", icon: <AiOutlineBarChart /> },
+    { to: "/daily-records", label: "Daily Records", icon: <AiOutlineCalendar /> }
   ];
 
-  return (
-    <nav className="fixed top-0 w-full bg-green-700 text-white shadow z-20">
-      <div className="max-w-6xl mx-auto flex items-center justify-between p-4">
-        {/* brand on left */}
-        <span className="font-bold text-xl">Digi-Shamba</span>
+  const authLinks = isLoggedIn
+    ? [{ action: handleLogout, label: "Logout", icon: <AiOutlineLogout /> }]
+    : [
+        { to: "/login", label: "Login", icon: <AiOutlineLogin /> },
+        { to: "/signup", label: "Sign Up", icon: <AiOutlineUserAdd /> }
+      ];
 
-        {/* Hamburger Button */}
+  return (
+    <nav className={`fixed top-0 w-full ${navBg} shadow z-30`}>
+      <div className="max-w-6xl mx-auto flex items-center px-4 py-3">
+        {/* Brand */}
+        <Link to="/" className={`${textColor} text-2xl font-bold`}>
+          Digi-Shamba
+        </Link>
+
+        {/* Unified desktop menu aligned right */}
+        <div className="hidden sm:flex sm:ml-auto sm:items-center sm:space-x-8">
+          {mainLinks.map(link => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={`${textColor} flex items-center space-x-1 hover:underline`}
+            >
+              {link.icon}
+              <span>{link.label}</span>
+            </Link>
+          ))}
+          {authLinks.map((link, idx) =>
+            link.to ? (
+              <Link
+                key={idx}
+                to={link.to}
+                className={`${textColor} flex items-center space-x-1 hover:underline`}
+              >
+                {link.icon}
+                <span>{link.label}</span>
+              </Link>
+            ) : (
+              <button
+                key={idx}
+                onClick={link.action}
+                className={`${textColor} flex items-center space-x-1 hover:underline`}
+              >
+                {link.icon}
+                <span>{link.label}</span>
+              </button>
+            )
+          )}
+        </div>
+
+        {/* Mobile hamburger (push to right on small screens) */}
         <button
-          className="md:hidden text-white"
+          className={`sm:hidden ml-auto ${textColor}`}
           onClick={() => setOpen(o => !o)}
         >
           {open ? <FaTimes size={24} /> : <FaBars size={24} />}
         </button>
-
-        {/* navigation on right */}
-        <div className={`flex items-center gap-6 md:static absolute bg-green-700 w-full left-0 md:w-auto md:bg-transparent transition-all duration-300 ease-in
-          ${open ? "top-full opacity-100" : "top-[-300px] opacity-0"}`}>
-          <Link to="/" className="flex items-center gap-1 hover:underline">
-            <AiOutlineHome size={20}/> Home
-          </Link>
-
-          {isLoggedIn ? (
-            <>
-              <Link to="/dashboard" className="flex items-center gap-1 hover:underline">
-                <AiOutlineDashboard size={20}/> Dashboard
-              </Link>
-              <Link to="/add-animal" className="flex items-center gap-1 hover:underline">
-                <AiOutlinePlus size={20}/> Add Animal
-              </Link>
-              <Link to="/daily-records" className="flex items-center gap-1 hover:underline">
-                <AiOutlineCalendar size={20}/> Daily Records
-              </Link>
-              <button onClick={handleLogout} className="flex items-center gap-1 hover:underline">
-                <AiOutlineLogout size={20}/> Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="flex items-center gap-1 hover:underline">
-                <AiOutlineLogin size={20}/> Login
-              </Link>
-              <Link to="/signup" className="flex items-center gap-1 hover:underline">
-                <AiOutlineUser size={20}/> Sign Up
-              </Link>
-            </>
-          )}
-
-          {isAdmin && (
-            <Link to="/admin" className="flex items-center gap-1 hover:underline">
-              <AiOutlineDashboard size={20}/> Admin
-            </Link>
-          )}
-        </div>
       </div>
+
+      {/* Mobile menu */}
+      {open && (
+        <ul className="sm:hidden bg-white shadow-md">
+          {mainLinks.map(link => (
+            <li key={link.to} className="border-b">
+              <Link
+                to={link.to}
+                className="flex items-center px-4 py-3 text-gray-800 hover:bg-gray-100"
+                onClick={() => setOpen(false)}
+              >
+                <span className="mr-2 text-xl">{link.icon}</span>
+                {link.label}
+              </Link>
+            </li>
+          ))}
+          {authLinks.map((link, idx) =>
+            link.to ? (
+              <li key={idx} className="border-b">
+                <Link
+                  to={link.to}
+                  className="flex items-center px-4 py-3 text-gray-800 hover:bg-gray-100"
+                  onClick={() => setOpen(false)}
+                >
+                  <span className="mr-2 text-xl">{link.icon}</span>
+                  {link.label}
+                </Link>
+              </li>
+            ) : (
+              <li key={idx} className="border-b">
+                <button
+                  onClick={() => { link.action(); setOpen(false); }}
+                  className="flex items-center w-full px-4 py-3 text-gray-800 hover:bg-gray-100"
+                >
+                  <span className="mr-2 text-xl">{link.icon}</span>
+                  {link.label}
+                </button>
+              </li>
+            )
+          )}
+        </ul>
+      )}
     </nav>
   );
 }
+
+
