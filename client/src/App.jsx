@@ -10,6 +10,7 @@ import AddAnimal from "./pages/AddAnimal";
 import AdminDashboard from "./pages/AdminDashboard";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import DailyRecords from "./pages/DailyRecords";
+import LoanResources from "./components/LoanResources"; // <--- import
 
 function App() {
   const isAdmin = localStorage.getItem("userRole") === "Admin"; // <— dynamic
@@ -34,6 +35,7 @@ function App() {
           />
           <Route path="/analytics" element={<AnalyticsDashboard />} />
           <Route path="/daily-records" element={<DailyRecords />} />
+          <Route path="/loans" element={<LoanResources />} />      {/* <--- new */}
         </Routes>
       </ErrorBoundary>
     </Router>

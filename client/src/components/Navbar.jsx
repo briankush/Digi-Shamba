@@ -31,7 +31,8 @@ export default function Navbar() {
   const mainLinks = [
     { to: "/", label: "Home", icon: <AiOutlineHome /> },
     { to: "/analytics", label: "Analytics", icon: <AiOutlineBarChart /> },
-    { to: "/daily-records", label: "Daily Records", icon: <AiOutlineCalendar /> }
+    { to: "/daily-records", label: "Daily Records", icon: <AiOutlineCalendar /> },
+    { to: "/loans", label: "Loans", icon: <AiOutlineUserAdd /> } // New Loans link
   ];
 
   const authLinks = isLoggedIn

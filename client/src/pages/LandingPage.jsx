@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -11,9 +11,15 @@ import {
   FaHeartbeat,
   FaChartLine,
   FaTachometerAlt,
+  FaUserPlus,
+  FaSignInAlt,
+  FaPlusCircle,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import Navbar from "../components/Navbar";
 import cowImage from "../Images/cows.jfif";
+import chickenImage from "../Images/chicken.jfif";
+import pigImage from "../Images/pig.jfif";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
@@ -49,12 +55,23 @@ function LandingPage() {
     };
   }, [navigate]);
 
+  // Hero slideshow images and index
+  const heroImages = [cowImage, chickenImage, pigImage];
+  const [heroIndex, setHeroIndex] = useState(0);
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setHeroIndex((i) => (i + 1) % heroImages.length);
+    }, 12000); // changed interval from 6000 to 12000 ms (12 seconds)
+    return () => clearInterval(iv);
+  }, []);
+  const currentHero = heroImages[heroIndex];
+
   return (
     <>
-      {/* HERO SECTION */}
+      {/* HERO SECTION (slideshow) */}
       <div
-        className="relative min-h-screen bg-cover bg-center"
-        style={{ backgroundImage: `url(${cowImage})` }}
+        className="relative min-h-screen bg-cover bg-center transition-background duration-1000"
+        style={{ backgroundImage: `url(${currentHero})` }}
       >
         <div className="absolute inset-0 bg-black/50"></div>
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen text-white px-4">
@@ -89,6 +106,12 @@ function LandingPage() {
               onClick={() => navigate("/signup")}
             >
               Sign Up
+            </button>
+            <button
+              className="px-6 py-2 rounded-lg bg-yellow-600 text-white font-semibold hover:bg-yellow-700 transition"
+              onClick={() => navigate("/loans")}
+            >
+              Farmer Loans
             </button>
           </div>
         </div>
@@ -132,6 +155,70 @@ function LandingPage() {
           </div>
         </div>
       </motion.section>
+
+      {/* GETTING STARTED SECTION */}
+      <section className="flex flex-col md:flex-row bg-white py-16 px-8">
+        {/* Left: chicken image, centered in its half */}
+        <div className="md:w-1/2 mb-8 md:mb-0 flex justify-center">
+          <img
+            src={chickenImage}
+            alt="Chicken"
+            className="w-3/4 md:w-full rounded-lg shadow-lg object-cover"
+          />
+        </div>
+        {/* Right: steps centered vertically and horizontally */}
+        <div className="md:w-1/2 flex flex-col justify-center items-center space-y-6">
+          <h2 className="text-3xl font-bold mb-6">Getting Started</h2>
+          {/*
+            Step 1: Click “Sign Up” and create your farm account.
+            Step 2: Log in with your new credentials.
+            Step 3: Add your animals under “Daily Records.”
+            Step 4: Enter daily health and production data for each animal.
+            Step 5: View your farm’s performance on the “Analytics” dashboard.
+          */}
+          {/*
+            Convert the plain numbered list into styled step cards with icons
+          */}
+          {[
+            {
+              icon: <FaUserPlus className="text-green-600 text-3xl" />,
+              title: "Create Account",
+              desc: "Click Sign Up to join Digi-Shamba and set up your farm profile.",
+            },
+            {
+              icon: <FaSignInAlt className="text-blue-600 text-3xl" />,
+              title: "Login Securely",
+              desc: "Use your credentials to access your farm dashboard.",
+            },
+            {
+              icon: <FaPlusCircle className="text-purple-600 text-3xl" />,
+              title: "Add Your Animals",
+              desc: "Register livestock under Daily Records to start tracking.",
+            },
+            {
+              icon: <FaCalendarAlt className="text-yellow-600 text-3xl" />,
+              title: "Record Daily Data",
+              desc: "Log health checks and production entries for each animal.",
+            },
+            {
+              icon: <FaChartLine className="text-indigo-600 text-3xl" />,
+              title: "View Insights",
+              desc: "Analyze trends and optimize operations via Analytics.",
+            },
+          ].map((step) => (
+            <div
+              key={step.title}
+              className="flex items-start space-x-4 p-4 bg-gray-100 rounded-lg shadow hover:bg-gray-200 transition"
+            >
+              <div className="flex-shrink-0">{step.icon}</div>
+              <div>
+                <h3 className="text-xl font-semibold">{step.title}</h3>
+                <p className="text-gray-700">{step.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* TESTIMONIALS SECTION (Slide from Left) */}
       <motion.section
@@ -236,3 +323,4 @@ function LandingPage() {
 }
 
 export default LandingPage;
+
