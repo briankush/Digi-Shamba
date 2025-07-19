@@ -18,14 +18,18 @@ function Signup() {
     try {
       const res = await axios.post("http://localhost:5000/api/auth/signup", form);
 
-      // Save all auth data consistently
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("userId", res.data.userId);
-      localStorage.setItem("userName", res.data.name);
-      localStorage.setItem("userEmail", form.email);
-      localStorage.setItem("userRole", res.data.role); // <— store role
+      // Save token if returned, otherwise redirect to login
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("userId", res.data.userId);
+        localStorage.setItem("userName", res.data.name);
+        localStorage.setItem("userEmail", form.email);
+        localStorage.setItem("userRole", res.data.role); // <— store role
 
-      navigate("/dashboard");
+        navigate("/dashboard");
+      } else {
+        navigate("/login");
+      }
     } catch (err) {
       console.error("Signup error:", err);
       setError("Signup failed. Try a different email.");
