@@ -5,9 +5,9 @@ import {
   AiOutlineBarChart,
   AiOutlineCalendar,
   AiOutlineBook,
-  AiOutlineLogout,
   AiOutlineLogin,
-  AiOutlineUserAdd
+  AiOutlineUserAdd,
+  AiOutlineLogout
 } from "react-icons/ai";
 import { FaBars, FaTimes } from "react-icons/fa";
 
@@ -32,28 +32,23 @@ export default function Navbar() {
 
   const isLanding = location.pathname === "/";
 
-  // Prepare main links: show Home + dashboard/records/hub when logged in
-  const mainLinks = isLoggedIn
-    ? [
-        { to: "/", label: "Home", icon: <AiOutlineHome /> },
-        { to: "/dashboard", label: "Dashboard", icon: <AiOutlineBarChart /> },
-        { to: "/daily-records", label: "Daily Records", icon: <AiOutlineCalendar /> },
-        { to: "/resource-hub", label: "Resource Hub", icon: <AiOutlineBook /> }
-      ]
-    : [];
+  // Always include Home, then add protected links if logged in
+  const mainLinks = [
+    { to: "/", label: "Home", icon: <AiOutlineHome /> },
+    ...(isLoggedIn ? [
+      { to: "/dashboard",    label: "Dashboard",    icon: <AiOutlineBarChart /> },
+      { to: "/daily-records", label: "Daily Records", icon: <AiOutlineCalendar /> },
+      { to: "/resource-hub",  label: "Resource Hub", icon: <AiOutlineBook /> }
+    ] : [])
+  ];
 
-  // Prepare auth links:
-  // - on landing & not logged in: show Login & Sign Up
-  // - if logged in: show Logout
-  let authLinks = [];
-  if (!isLoggedIn && isLanding) {
-    authLinks = [
-      { to: "/login",   label: "Login",   icon: <AiOutlineLogin /> },
-      { to: "/signup",  label: "Sign Up", icon: <AiOutlineUserAdd /> }
-    ];
-  } else if (isLoggedIn) {
-    authLinks = [{ action: handleLogout, label: "Logout", icon: <AiOutlineLogout /> }];
-  }
+  // If not logged in, show Login & Sign Up; if logged in, show Logout
+  const authLinks = isLoggedIn
+    ? [{ action: handleLogout, label: "Logout", icon: <AiOutlineLogout /> }]
+    : [
+        { to: "/login",  label: "Login",   icon: <AiOutlineLogin /> },
+        { to: "/signup", label: "Sign Up", icon: <AiOutlineUserAdd /> }
+      ];
 
   return (
     <nav className={`fixed top-0 w-full ${navBg} shadow z-30`}>
@@ -66,25 +61,24 @@ export default function Navbar() {
         {/* Unified desktop menu aligned right */}
         <div className="hidden sm:flex sm:ml-auto sm:items-center sm:space-x-6">
           {mainLinks.map(link => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`${textColor} flex items-center space-x-1 hover:underline`}
-            >
+            <Link key={link.to} to={link.to} className={`${textColor} flex items-center space-x-1 hover:underline`}>
               {link.icon}
               <span>{link.label}</span>
             </Link>
           ))}
-          {authLinks.map((link, idx) => (
-            <button
-              key={idx}
-              onClick={link.action}
-              className={`${textColor} flex items-center space-x-1 hover:underline`}
-            >
-              {link.icon}
-              <span>{link.label}</span>
-            </button>
-          ))}
+          {authLinks.map((link, idx) =>
+            link.to ? (
+              <Link key={idx} to={link.to} className={`${textColor} flex items-center space-x-1 hover:underline`}>
+                {link.icon}
+                <span>{link.label}</span>
+              </Link>
+            ) : (
+              <button key={idx} onClick={link.action} className={`${textColor} flex items-center space-x-1 hover:underline`}>
+                {link.icon}
+                <span>{link.label}</span>
+              </button>
+            )
+          )}
         </div>
 
         {/* Mobile hamburger (push to right on small screens) */}
@@ -111,22 +105,36 @@ export default function Navbar() {
               </Link>
             </li>
           ))}
-          {authLinks.map((link, idx) => (
-            <li key={idx} className="border-b">
-              <button
-                onClick={() => { link.action(); setOpen(false); }}
-                className="flex items-center w-full px-4 py-3 text-gray-800 hover:bg-gray-100"
-              >
-                <span className="mr-2 text-xl">{link.icon}</span>
-                {link.label}
-              </button>
-            </li>
-          ))}
+          {authLinks.map((link, idx) =>
+            link.to ? (
+              <li key={idx} className="border-b">
+                <Link
+                  to={link.to}
+                  className="flex items-center px-4 py-3 text-gray-800 hover:bg-gray-100"
+                  onClick={() => setOpen(false)}
+                >
+                  <span className="mr-2 text-xl">{link.icon}</span>
+                  {link.label}
+                </Link>
+              </li>
+            ) : (
+              <li key={idx} className="border-b">
+                <button
+                  onClick={() => { link.action(); setOpen(false); }}
+                  className="flex items-center w-full px-4 py-3 text-gray-800 hover:bg-gray-100"
+                >
+                  <span className="mr-2 text-xl">{link.icon}</span>
+                  {link.label}
+                </button>
+              </li>
+            )
+          )}
         </ul>
       )}
     </nav>
   );
 }
+
 
 
 
