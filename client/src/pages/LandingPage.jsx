@@ -20,6 +20,7 @@ import Navbar from "../components/Navbar";
 import cowImage from "../Images/cows.jfif";
 import chickenImage from "../Images/chicken.jfif";
 import pigImage from "../Images/pig.jfif";
+// import goatImage from "../Images/goat.jfif"; // re-add goat image import
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
@@ -107,12 +108,7 @@ function LandingPage() {
             >
               Sign Up
             </button>
-            <button
-              className="px-6 py-2 rounded-lg bg-yellow-600 text-white font-semibold hover:bg-yellow-700 transition"
-              onClick={() => navigate("/loans")}
-            >
-              Farmer Loans
-            </button>
+            {/* Removed Farmer Loans button here */}
           </div>
         </div>
       </div>
@@ -158,27 +154,19 @@ function LandingPage() {
 
       {/* GETTING STARTED SECTION */}
       <section className="flex flex-col md:flex-row bg-white py-16 px-8">
-        {/* Left: chicken image, centered in its half */}
+        {/* Left: chicken image */}
         <div className="md:w-1/2 mb-8 md:mb-0 flex justify-center">
           <img
             src={chickenImage}
             alt="Chicken"
-            className="w-3/4 md:w-full rounded-lg shadow-lg object-cover"
+            className="w-3/4 md:w-3/4 rounded-lg shadow-lg object-cover"
           />
         </div>
-        {/* Right: steps centered vertically and horizontally */}
-        <div className="md:w-1/2 flex flex-col justify-center items-center space-y-6">
-          <h2 className="text-3xl font-bold mb-6">Getting Started</h2>
-          {/*
-            Step 1: Click “Sign Up” and create your farm account.
-            Step 2: Log in with your new credentials.
-            Step 3: Add your animals under “Daily Records.”
-            Step 4: Enter daily health and production data for each animal.
-            Step 5: View your farm’s performance on the “Analytics” dashboard.
-          */}
-          {/*
-            Convert the plain numbered list into styled step cards with icons
-          */}
+        {/* Right: styled step cards (variable height) */}
+        <div className="md:w-1/2 flex flex-col justify-center space-y-6">
+          <h2 className="text-3xl font-bold mb-4 text-center md:text-left">
+            Getting Started
+          </h2>
           {[
             {
               icon: <FaUserPlus className="text-green-600 text-3xl" />,
@@ -323,4 +311,5 @@ function LandingPage() {
 }
 
 export default LandingPage;
+    
 

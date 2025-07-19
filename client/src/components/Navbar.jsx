@@ -6,7 +6,8 @@ import {
   AiOutlineCalendar,
   AiOutlineLogin,
   AiOutlineUserAdd,
-  AiOutlineLogout
+  AiOutlineLogout,
+  AiOutlineBook
 } from "react-icons/ai";
 import { FaBars, FaTimes } from "react-icons/fa";
 
@@ -30,13 +31,17 @@ export default function Navbar() {
 
   const mainLinks = [
     { to: "/", label: "Home", icon: <AiOutlineHome /> },
-    { to: "/analytics", label: "Analytics", icon: <AiOutlineBarChart /> },
-    { to: "/daily-records", label: "Daily Records", icon: <AiOutlineCalendar /> },
-    { to: "/loans", label: "Loans", icon: <AiOutlineUserAdd /> } // New Loans link
+    ...(isLoggedIn ? [
+      { to: "/analytics", label: "Analytics", icon: <AiOutlineBarChart /> },
+      { to: "/daily-records", label: "Daily Records", icon: <AiOutlineCalendar /> }
+    ] : [])
   ];
 
   const authLinks = isLoggedIn
-    ? [{ action: handleLogout, label: "Logout", icon: <AiOutlineLogout /> }]
+    ? [
+        { to: "/resource-hub", label: "Resource Hub", icon: <AiOutlineBook /> },
+        { action: handleLogout, label: "Logout", icon: <AiOutlineLogout /> }
+      ]
     : [
         { to: "/login", label: "Login", icon: <AiOutlineLogin /> },
         { to: "/signup", label: "Sign Up", icon: <AiOutlineUserAdd /> }

@@ -11,6 +11,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import DailyRecords from "./pages/DailyRecords";
 import LoanResources from "./components/LoanResources"; // <--- import
+import ResourceHub from "./pages/ResourceHub";
+import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   const isAdmin = localStorage.getItem("userRole") === "Admin"; // <— dynamic
@@ -33,9 +35,24 @@ function App() {
                 : <Navigate to="/login" replace />
             }
           />
-          <Route path="/analytics" element={<AnalyticsDashboard />} />
-          <Route path="/daily-records" element={<DailyRecords />} />
+          <Route 
+            path="/analytics" 
+            element={
+              <PrivateRoute>
+                <AnalyticsDashboard />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/daily-records" 
+            element={
+              <PrivateRoute>
+                <DailyRecords />
+              </PrivateRoute>
+            } 
+          />
           <Route path="/loans" element={<LoanResources />} />      {/* <--- new */}
+          <Route path="/resource-hub" element={<ResourceHub />} />   {/* new */}
         </Routes>
       </ErrorBoundary>
     </Router>
