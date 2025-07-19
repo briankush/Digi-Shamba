@@ -1,86 +1,81 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-export default function Profile() {
-  const [name, setName] = useState(localStorage.getItem("userName") || "");
-  const [email, setEmail] = useState(localStorage.getItem("userEmail") || "");
-  const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
+export default function ProfileDropdown() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("");
 
-  const handlePasswordUpdate = async (e) => {
-    e.preventDefault();
-    setSuccess("");
-    setError("");
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        "/auth/update-password",
-        { email, password, newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSuccess("Password updated successfully.");
-      setPassword("");
-      setNewPassword("");
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to update password.");
-    }
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setName(localStorage.getItem("userName") || "Guest");
+    setEmail(localStorage.getItem("userEmail") || "guest@example.com");
+    setRole(localStorage.getItem("userRole") || "User");
+  }, []);
+
+  const toggleDropdown = () => setIsOpen(!isOpen);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center pt-24">
-      <div className="bg-white rounded-lg shadow p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6">My Profile</h2>
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-1">Name</label>
-          <input
-            className="w-full border rounded px-3 py-2 bg-gray-100"
-            value={name}
-            disabled
-            readOnly
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-1">Email</label>
-          <input
-            className="w-full border rounded px-3 py-2 bg-gray-100"
-            value={email}
-            disabled
-            readOnly
-          />
-        </div>
-        <form onSubmit={handlePasswordUpdate}>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-1">Current Password</label>
-            <input
-              type="password"
-              className="w-full border rounded px-3 py-2"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-            />
+    <div className="relative">
+      {/* Profile Circle */}
+      <button
+        onClick={toggleDropdown}
+        className="w-10 h-10 bg-gray-300 text-gray-700 rounded-full flex items-center justify-center font-bold"
+      >
+        {name.charAt(0).toUpperCase()}
+      </button>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg p-4 z-50">
+          <div className="mb-2 border-b pb-2">
+            <p className="font-semibold">{name}</p>
+            <p className="text-sm text-gray-500">{email}</p>
+            <p className="text-sm text-gray-500">{role}</p>
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-1">New Password</label>
-            <input
-              type="password"
-              className="w-full border rounded px-3 py-2"
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
-              required
-            />
-          </div>
-          {success && <div className="text-green-600 mb-2">{success}</div>}
-          {error && <div className="text-red-600 mb-2">{error}</div>}
-          <button
-            type="submit"
-            className="w-full bg-green-700 text-white py-2 rounded hover:bg-green-800"
-          >
-            Update Password
-          </button>
-        </form>
-      </div>
+          <ul className="space-y-2">
+            <li>
+              <Link
+                to="/dashboard"
+                className="flex items-center gap-2 hover:text-green-600"
+              >
+                🏠 Dashboard
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/profile"
+                className="flex items-center gap-2 hover:text-green-600"
+              >
+                ⚙️ Settings
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/notifications"
+                className="flex items-center gap-2 hover:text-green-600"
+              >
+                🔔 Notifications
+              </Link>
+            </li>
+            <li>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 hover:text-red-600 w-full text-left"
+              >
+                🚪 Log out
+              </button>
+            </li>
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

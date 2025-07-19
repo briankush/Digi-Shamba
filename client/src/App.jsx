@@ -5,7 +5,7 @@ import Navbar from "./components/Navbar";
 import PrivateRoute from "./components/PrivateRoute";
 import Loader from "./components/Loader";
 
-// lazy‐load pages
+// Lazy-load pages
 const LandingPage        = lazy(() => import("./pages/LandingPage"));
 const Login              = lazy(() => import("./pages/Login"));
 const Signup             = lazy(() => import("./pages/Signup"));
@@ -15,8 +15,8 @@ const ResourceHub        = lazy(() => import("./pages/ResourceHub"));
 const LoanResources      = lazy(() => import("./components/LoanResources"));
 const Dashboard          = lazy(() => import("./pages/Dashboard"));
 const Admin              = lazy(() => import("./pages/AdminDashboard"));
-const AddAnimal          = lazy(() => import("./pages/AddAnimal")); // Add this import
-const Profile             = lazy(() => import("./pages/Profile"));
+const AddAnimal          = lazy(() => import("./pages/AddAnimal"));
+const Profile            = lazy(() => import("./pages/Profile"));
 
 function App() {
   return (
@@ -25,6 +25,7 @@ function App() {
       <ErrorBoundary>
         <Suspense fallback={<Loader />}>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
@@ -59,7 +60,7 @@ function App() {
               }
             />
 
-            {/* Alias /add-animal to the DailyRecords page */}
+            {/* Add Animal */}
             <Route
               path="/add-animal"
               element={
@@ -83,7 +84,7 @@ function App() {
               }
             />
 
-            {/* Profile */}
+            {/* Profile Page */}
             <Route
               path="/profile"
               element={
@@ -100,5 +101,3 @@ function App() {
 }
 
 export default App;
-
-
