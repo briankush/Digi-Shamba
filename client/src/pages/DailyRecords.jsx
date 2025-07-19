@@ -6,6 +6,8 @@ import { GiCow } from "react-icons/gi";
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 
+const API = import.meta.env.VITE_API_BASE_URL;
+
 export default function DailyRecords() {
   const navigate = useNavigate();
   const [animals, setAnimals] = useState([]);
@@ -68,7 +70,7 @@ export default function DailyRecords() {
         
         // Fetch animals with proper error handling
         try {
-          const animalRes = await axios.get("http://localhost:5000/api/farm-animals", {
+          const animalRes = await axios.get(`${API}/farm-animals`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           
@@ -150,7 +152,7 @@ export default function DailyRecords() {
       
       // Add special handling to check for end of month days
       const recordsRes = await axios.get(
-        `http://localhost:5000/api/daily-records/month/${year}/${month}`, 
+        `${API}/daily-records/month/${year}/${month}`, 
         { headers: { Authorization: `Bearer ${token}` }}
       );
       
@@ -173,7 +175,7 @@ export default function DailyRecords() {
       // Fetch monthly totals
       try {
         const totalsRes = await axios.get(
-          `http://localhost:5000/api/daily-records/monthly-totals/${year}/${month}`,
+          `${API}/daily-records/monthly-totals/${year}/${month}`,
           { headers: { Authorization: `Bearer ${token}` }}
         );
         setMonthlyTotal(totalsRes.data);
@@ -405,7 +407,7 @@ export default function DailyRecords() {
       console.log("Submitting payload with date:", payload.date);
       
       // Use the explicit date in the API request
-      await axios.post("http://localhost:5000/api/daily-records", payload, {
+      await axios.post(`${API}/daily-records`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -433,7 +435,7 @@ export default function DailyRecords() {
     if (!token) return navigate("/login");
     
     try {
-      await axios.delete(`http://localhost:5000/api/daily-records/${recordId}`, {
+      await axios.delete(`${API}/daily-records/${recordId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -794,4 +796,3 @@ export default function DailyRecords() {
     </div>
   );
 }
-  

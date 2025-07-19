@@ -25,7 +25,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 
-// Immediately configure axios
+// Set axios baseURL from Vite env (move this to main.jsx if not already there)
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 
 function LandingPage() {

@@ -5,8 +5,9 @@ export default function AnimalList({ animalType, onEdit, onDelete }) {
   const [records, setRecords] = useState([]);
 
   useEffect(() => {
+    const API = import.meta.env.VITE_API_BASE_URL;
     axios
-      .get(`http://localhost:5000/api/animals?type=${animalType}`)
+      .get(`${API}/animals?type=${animalType}`)
       .then((res) => setRecords(res.data))
       .catch(() => setRecords([]));
   }, [animalType]);

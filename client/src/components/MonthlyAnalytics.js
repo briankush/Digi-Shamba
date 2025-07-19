@@ -6,6 +6,8 @@ import './MonthlyAnalytics.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend);
 
+const API = import.meta.env.VITE_API_BASE_URL;
+
 const MonthlyAnalytics = () => {
   const [selectedMonth, setSelectedMonth] = useState(moment().format('YYYY-MM'));
   const [analytics, setAnalytics] = useState(null);
@@ -18,7 +20,7 @@ const MonthlyAnalytics = () => {
   const fetchMonthlyAnalytics = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/analytics/monthly/${selectedMonth}`);
+      const response = await fetch(`${API}/analytics/monthly/${selectedMonth}`);
       const data = await response.json();
       setAnalytics(data);
     } catch (error) {

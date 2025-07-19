@@ -3,6 +3,9 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineUser } from "react-icons/ai"; // swapped icon
 
+// Set axios baseURL from Vite env (if not already set globally)
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
+
 function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");

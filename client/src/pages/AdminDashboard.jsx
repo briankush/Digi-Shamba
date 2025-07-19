@@ -30,12 +30,13 @@ export default function AdminDashboard() {
       return;
     }
 
+    const API = import.meta.env.VITE_API_BASE_URL;
     const fetchData = async () => {
       try {
         const headers = { Authorization: `Bearer ${token}` };
         const [uRes, aRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/admin/users", { headers }),
-          axios.get("http://localhost:5000/api/admin/animals", { headers })
+          axios.get(`${API}/admin/users`, { headers }),
+          axios.get(`${API}/admin/animals`, { headers })
         ]);
         setUsers(uRes.data);
         setAnimals(aRes.data);
@@ -57,7 +58,6 @@ export default function AdminDashboard() {
           <span className="blinking-cursor">|</span>
         )}
       </h2>
-      {/* Dashboard title can remain centered or be left-aligned as needed */}
       <h1 className="text-3xl font-bold mb-6 text-center">Admin Dashboard</h1>
 
       {/* Farmers Section */}

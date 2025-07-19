@@ -5,7 +5,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './Records.css';
 
 const localizer = momentLocalizer(moment);
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Records = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -27,7 +27,7 @@ const Records = () => {
   const fetchMonthlyRecords = async () => {
     try {
       const month = moment(currentDate).format('YYYY-MM');
-      const response = await fetch(`${API_BASE_URL}/api/records/monthly/${month}`, {
+      const response = await fetch(`${API_BASE_URL}/records/monthly/${month}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || 'dummy-token'}`
         }
@@ -58,7 +58,7 @@ const Records = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_BASE_URL}/api/records/daily`, {
+      const response = await fetch(`${API_BASE_URL}/records/daily`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const API = import.meta.env.VITE_API_BASE_URL;
+
 export default function AnimalForm({ animalType, animal, onSubmit, onCancel }) {
   const [form, setForm] = useState({
     name: "",
@@ -42,7 +44,7 @@ export default function AnimalForm({ animalType, animal, onSubmit, onCancel }) {
       if (animal) {
         // update existing
         await axios.put(
-          `http://localhost:5000/api/farm-animals/${animal._id}`,
+          `${API}/farm-animals/${animal._id}`,
           { ...form, type: animalType },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -50,7 +52,7 @@ export default function AnimalForm({ animalType, animal, onSubmit, onCancel }) {
         // create new
         const owner = localStorage.getItem("userId");
         await axios.post(
-          "http://localhost:5000/api/farm-animals",
+          `${API}/farm-animals`,
           { ...form, type: animalType, owner },
           { headers: { Authorization: `Bearer ${token}` } }
         );

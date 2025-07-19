@@ -4,6 +4,8 @@ import axios from "axios";
 import AnimalForm from "../components/AnimalForm";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 
+const API = import.meta.env.VITE_API_BASE_URL;
+
 function Dashboard() {
   const [animals, setAnimals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +35,7 @@ function Dashboard() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/farm-animals", {
+      const res = await axios.get(`${API}/farm-animals`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAnimals(res.data);
@@ -53,7 +55,7 @@ function Dashboard() {
     if (!window.confirm("Are you sure you want to delete this animal?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/farm-animals/${id}`, {
+      await axios.delete(`${API}/farm-animals/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchAnimals();
