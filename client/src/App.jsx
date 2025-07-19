@@ -14,7 +14,7 @@ const DailyRecords       = lazy(() => import("./pages/DailyRecords"));
 const ResourceHub        = lazy(() => import("./pages/ResourceHub"));
 const LoanResources      = lazy(() => import("./components/LoanResources"));
 const Dashboard          = lazy(() => import("./pages/Dashboard"));
-const Admin              = lazy(() => import("./pages/Admin"));
+const Admin              = lazy(() => import("./pages/AdminDashboard"));
 const AddAnimal          = lazy(() => import("./pages/AddAnimal")); // Add this import
 const Profile             = lazy(() => import("./pages/Profile"));
 
