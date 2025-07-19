@@ -16,7 +16,8 @@ function Login() {
     e.preventDefault();
     setError("");
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", form);
+      // use relative URL; axios.defaults.baseURL should be set in main.jsx
+      const res = await axios.post("/auth/login", form);
       // Save token
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("userId", res.data.userId);

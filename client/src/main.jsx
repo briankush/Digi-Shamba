@@ -4,7 +4,7 @@ import App from "./App";
 import axios from "axios";
 import "./index.css";
 
-// Set axios base URL from Vite env
+// set baseURL from Vite env
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
