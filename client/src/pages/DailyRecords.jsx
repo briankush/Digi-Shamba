@@ -6,8 +6,6 @@ import { GiCow } from "react-icons/gi";
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 
-const API = import.meta.env.VITE_API_BASE_URL;
-
 export default function DailyRecords() {
   const navigate = useNavigate();
   const [animals, setAnimals] = useState([]);
@@ -796,3 +794,4 @@ export default function DailyRecords() {
     </div>
   );
 }
+  
