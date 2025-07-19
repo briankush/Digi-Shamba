@@ -7,6 +7,8 @@ import {
 } from "recharts";
 import { FaCalendarAlt } from "react-icons/fa";
 
+const API = import.meta.env.VITE_API_BASE_URL;
+
 // Move months outside the component to avoid new array reference each render
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -32,7 +34,7 @@ export default function AnalyticsDashboard() {
     setLoading(true);
     try {
       // Fetch analytics data
-      const res = await axios.get(`/analytics`, {
+      const res = await axios.get(`${API}/analytics`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEntries(res.data);
@@ -43,7 +45,7 @@ export default function AnalyticsDashboard() {
       for (let i = 0; i < months.length; i++) {
         try {
           const r = await axios.get(
-            `/daily-records/monthly-totals/${currentYear}/${i + 1}`,
+            `${API}/daily-records/monthly-totals/${currentYear}/${i + 1}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           milkTotals[months[i]] = r.data?.totalMilk || 0;
@@ -210,7 +212,7 @@ export default function AnalyticsDashboard() {
     };
 
     try {
-      await axios.post(`/analytics`, payload, {
+      await axios.post(`${API}/analytics`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setForm({ month: "", feedKg: "", milkL: "", feedCost: "", produceValue: "" });

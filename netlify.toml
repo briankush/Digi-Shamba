@@ -1,0 +1,12 @@
+[build]
+  # run the client build script, not "dev"
+  command   = "pnpm --filter client run build"
+  # publish the compiled static files
+  publish   = "client/dist"
+  # root for serverless functions (if any)
+  functions = "server/functions"
+
+# optional: set environment variables
+[build.environment]
+  NODE_ENV               = "production"
+  VITE_API_BASE_URL      = "https://digi-shamba.onrender.com/api"
