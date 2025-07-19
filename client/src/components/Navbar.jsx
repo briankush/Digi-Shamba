@@ -5,11 +5,14 @@ import {
   AiOutlineBarChart,
   AiOutlineCalendar,
   AiOutlineBook,
-  AiOutlineLogout
+  AiOutlineLogout,
+  AiOutlineLogin,
+  AiOutlineUserAdd
 } from "react-icons/ai";
 import { FaBars, FaTimes } from "react-icons/fa";
 
 export default function Navbar() {
+  // compute logged-in status from the token once on mount
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
@@ -17,7 +20,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem("token"));
-  }, [location]);
+  }, []); // removed [location] dependency
 
   const handleLogout = () => {
     localStorage.clear();
@@ -27,20 +30,30 @@ export default function Navbar() {
   const navBg = "bg-green-600";
   const textColor = "text-white";
 
-  // Show Home always, then Dashboard, Daily Records, Resource Hub when logged in
-  const mainLinks = [
-    { to: "/", label: "Home", icon: <AiOutlineHome /> },
-    ...(isLoggedIn ? [
-      { to: "/dashboard",    label: "Dashboard",    icon: <AiOutlineBarChart /> },
-      { to: "/daily-records", label: "Daily Records", icon: <AiOutlineCalendar /> },
-      { to: "/resource-hub",  label: "Resource Hub", icon: <AiOutlineBook /> }
-    ] : [])
-  ];
+  const isLanding = location.pathname === "/";
 
-  // Only Logout for authenticated users
-  const authLinks = isLoggedIn
-    ? [{ action: handleLogout, label: "Logout", icon: <AiOutlineLogout /> }]
+  // Prepare main links: show Home + dashboard/records/hub when logged in
+  const mainLinks = isLoggedIn
+    ? [
+        { to: "/", label: "Home", icon: <AiOutlineHome /> },
+        { to: "/dashboard", label: "Dashboard", icon: <AiOutlineBarChart /> },
+        { to: "/daily-records", label: "Daily Records", icon: <AiOutlineCalendar /> },
+        { to: "/resource-hub", label: "Resource Hub", icon: <AiOutlineBook /> }
+      ]
     : [];
+
+  // Prepare auth links:
+  // - on landing & not logged in: show Login & Sign Up
+  // - if logged in: show Logout
+  let authLinks = [];
+  if (!isLoggedIn && isLanding) {
+    authLinks = [
+      { to: "/login",   label: "Login",   icon: <AiOutlineLogin /> },
+      { to: "/signup",  label: "Sign Up", icon: <AiOutlineUserAdd /> }
+    ];
+  } else if (isLoggedIn) {
+    authLinks = [{ action: handleLogout, label: "Logout", icon: <AiOutlineLogout /> }];
+  }
 
   return (
     <nav className={`fixed top-0 w-full ${navBg} shadow z-30`}>
