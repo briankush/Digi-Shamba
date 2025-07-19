@@ -36,9 +36,10 @@ export default function Navbar() {
   const mainLinks = [
     { to: "/", label: "Home", icon: <AiOutlineHome /> },
     ...(isLoggedIn ? [
-      { to: "/dashboard",    label: "Dashboard",    icon: <AiOutlineBarChart /> },
+      { to: "/dashboard", label: "Dashboard", icon: <AiOutlineBarChart /> },
+      { to: "/add-animal", label: "Add Animal", icon: <AiOutlineCalendar /> },
       { to: "/daily-records", label: "Daily Records", icon: <AiOutlineCalendar /> },
-      { to: "/resource-hub",  label: "Resource Hub", icon: <AiOutlineBook /> }
+      { to: "/resource-hub", label: "Resource Hub", icon: <AiOutlineBook /> }
     ] : [])
   ];
 
