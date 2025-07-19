@@ -32,7 +32,7 @@ export default function AnalyticsDashboard() {
     setLoading(true);
     try {
       // Fetch analytics data
-      const res = await axios.get("http://localhost:5000/api/analytics", {
+      const res = await axios.get(`/analytics`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEntries(res.data);
@@ -42,11 +42,11 @@ export default function AnalyticsDashboard() {
       const milkTotals = {};
       for (let i = 0; i < months.length; i++) {
         try {
-          const res = await axios.get(
-            `http://localhost:5000/api/daily-records/monthly-totals/${currentYear}/${i + 1}`,
+          const r = await axios.get(
+            `/daily-records/monthly-totals/${currentYear}/${i + 1}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          milkTotals[months[i]] = res.data?.totalMilk || 0;
+          milkTotals[months[i]] = r.data?.totalMilk || 0;
         } catch {
           milkTotals[months[i]] = 0;
         }
@@ -210,7 +210,7 @@ export default function AnalyticsDashboard() {
     };
 
     try {
-      await axios.post("http://localhost:5000/api/analytics", payload, {
+      await axios.post(`/analytics`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setForm({ month: "", feedKg: "", milkL: "", feedCost: "", produceValue: "" });
@@ -392,4 +392,5 @@ export default function AnalyticsDashboard() {
     </div>
   );
 }
+
 

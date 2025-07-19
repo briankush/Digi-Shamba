@@ -39,6 +39,8 @@ export default function DailyRecords() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChangingDate, setIsChangingDate] = useState(false);
   
+  const API = import.meta.env.VITE_API_BASE_URL;
+
   // Update the getLocalDateStr function to ensure proper handling of month end dates
   const getLocalDateStr = (date) => {
     // Ensure we're working with a date object
