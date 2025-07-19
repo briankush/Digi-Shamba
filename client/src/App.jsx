@@ -16,6 +16,7 @@ const LoanResources      = lazy(() => import("./components/LoanResources"));
 const Dashboard          = lazy(() => import("./pages/Dashboard"));
 const Admin              = lazy(() => import("./pages/Admin"));
 const AddAnimal          = lazy(() => import("./pages/AddAnimal")); // Add this import
+const Profile             = lazy(() => import("./pages/Profile"));
 
 function App() {
   return (
@@ -78,6 +79,16 @@ function App() {
               element={
                 <PrivateRoute>
                   <Admin />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Profile */}
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <Profile />
                 </PrivateRoute>
               }
             />

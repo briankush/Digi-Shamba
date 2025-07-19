@@ -277,7 +277,13 @@ function LandingPage() {
               <FaPhoneAlt /> +254 724 829437
             </p>
             <p className="flex justify-center md:justify-start items-center gap-2 mt-2">
-              <FaEnvelope /> support@digishamba.co.ke
+              <FaEnvelope />
+              <a
+                href="mailto:digishamba@gmail.com"
+                className="hover:underline text-white"
+              >
+                digishamba@gmail.com
+              </a>
             </p>
           </div>
 
