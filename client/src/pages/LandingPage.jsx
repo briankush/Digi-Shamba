@@ -17,9 +17,9 @@ import {
   FaCalendarAlt,
 } from "react-icons/fa";
 import Navbar from "../components/Navbar";
-import cowImage from "../images/Cows.jfif";
-import chickenImage from "../images/Chicken.jfif";
-import pigImage from "../images/Pig.jfif";
+import cowImage from "../images/cows.jfif";
+import chickenImage from "../images/chicken.jfif";
+import pigImage from "../images/pig.jfif";
 // import goatImage from "../Images/goat.jfif"; // re-add goat image import
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
