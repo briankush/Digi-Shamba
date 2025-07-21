@@ -37,22 +37,17 @@ Use these credentials to test the application:
 
 ## Screenshots
 Here are some screenshots of the application:
+## Screenshots
+Here are some screenshots of the application:
 
-![](./images/screenshot(376).png)
-
-![](./images/screenshot(377).png)
-
-![](./images/screenshot(378).png)
-
-![](./images/screenshot(379).png)
-
-![](./images/screenshot(380).png)
-
-![](./images/screenshot(381).png)
-
-![](./images/screenshot(382).png)
-
-![](./images/screenshot(383).png)
+![Screenshot 1](./client/src/images/screenshot(376).png)
+![Screenshot 2](./client/src/images/screenshot(377).png)
+![Screenshot 3](./client/src/images/screenshot(378).png)
+![Screenshot 4](./client/src/images/screenshot(379).png)
+![Screenshot 5](./client/src/images/screenshot(380).png)
+![Screenshot 6](./client/src/images/screenshot(381).png)
+![Screenshot 7](./client/src/images/screenshot(382).png)
+![Screenshot 8](./client/src/images/screenshot(383).png)
 
 ## Setup & Installation
 
