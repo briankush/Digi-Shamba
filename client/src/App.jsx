@@ -32,7 +32,7 @@ function App() {
         <ErrorBoundary>
           <Suspense fallback={<Loader />}>
             <Routes>
-              {/* Public Routes - Make sure there's only ONE route for the landing page */}
+              {/* Public Routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
@@ -90,14 +90,12 @@ function App() {
                   </PrivateRoute>
                 }
               />
-
-              {/* Redirect /admin-dashboard to /admin */}
               <Route
                 path="/admin-dashboard"
                 element={<Navigate to="/admin" replace />}
               />
 
-              {/* Profile Page */}
+              {/* Profile */}
               <Route
                 path="/profile"
                 element={
@@ -107,7 +105,7 @@ function App() {
                 }
               />
 
-              {/* Catch any other routes and redirect to home */}
+              {/* Catch-all */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
