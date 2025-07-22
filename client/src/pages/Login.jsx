@@ -31,27 +31,33 @@ export default function Login() {
 
       console.log("Login successful:", response.data);
 
-      if (response.data.user) {
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("userName", response.data.user.name);
-        localStorage.setItem("userEmail", response.data.user.email);
-        localStorage.setItem("userRole", response.data.user.role);
+      // Check using response.data.name instead of response.data.user
+      if (!response.data.name) {
+        setError("Missing user data in response.");
+        setLoading(false);
+        return;
+      }
 
-        if (response.data.user.role === "Admin") {
-          navigate("/admin");
-        } else {
-          navigate("/dashboard");
-        }
+      // Store user info using returned top-level keys
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("userName", response.data.name);
+      localStorage.setItem("userEmail", response.data.userEmail || "");
+      localStorage.setItem("userRole", response.data.role);
+
+      // Redirect based on role
+      if (response.data.role === "Admin") {
+        console.log("User role is Admin. Redirecting to admin side.");
+        navigate("/admin");
       } else {
-        setError("Login successful, but user data is missing. Please try again.");
-        localStorage.setItem("token", response.data.token);
+        console.log("User role is Farmer. Redirecting to dashboard.");
         navigate("/dashboard");
       }
     } catch (err) {
       console.error("Login error:", err);
       if (err.response) {
         setError(
-          err.response.data?.message || "Login failed. Please check your credentials."
+          err.response.data?.message ||
+            "Login failed. Please check your credentials."
         );
       } else if (err.request) {
         setError("Could not connect to the server. Please try again later.");

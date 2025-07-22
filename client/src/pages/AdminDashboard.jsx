@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Users, AlertCircle } from "lucide-react";
 import { FaCow } from "react-icons/fa6";
+import { AuthContext } from "../context/AuthContext";
 
 export default function AdminDashboard() {
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [animals, setAnimals] = useState([]);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
-  const userName = localStorage.getItem("userName") || "Admin"; // Get username from local storage
-  const userRole = localStorage.getItem("userRole") || ""; // Get user role from local storage
-
-  // Typing animation
-  const fullMessage = `Welcome back, ${userName}!`; // Use username in greeting
+  const adminName = user ? user.name : "Admin";
+  const fullMessage = `Welcome back, ${adminName}!`;
   const [typedMsg, setTypedMsg] = useState("");
+
   useEffect(() => {
     let idx = 0;
     const interval = setInterval(() => {
@@ -24,91 +24,55 @@ export default function AdminDashboard() {
       if (idx > fullMessage.length) clearInterval(interval);
     }, 100);
     return () => clearInterval(interval);
-  }, [fullMessage, userName]); // Add userName as a dependency
+  }, [fullMessage]);
 
   useEffect(() => {
+    if (!user || user.role.toLowerCase() !== "admin") {
+      navigate("/dashboard");
+      return;
+    }
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
       return;
     }
-
-    // Check for admin role
-    if (userRole !== "Admin") {
-      navigate("/dashboard"); // Redirect non-admins
-      return;
-    }
-
-    // Make sure the API URL is correctly formatted
     let API = import.meta.env.VITE_API_BASE_URL;
-
-    // Ensure the URL has the correct format (add https:// if needed)
     if (API && !API.startsWith("http")) {
       API = `https://${API}`;
     }
-
-    console.log("API URL:", API); // Debug the API URL
-
     const fetchData = async () => {
       try {
-        // Make sure token is properly formatted
         const headers = {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
           Accept: "application/json",
         };
-
-        console.log("Using token:", token.substring(0, 15) + "..."); // Debug token (show first 15 chars)
-
-        // Add error handling for each request separately
         try {
           const uRes = await axios.get(`${API}/admin/users`, { headers });
           setUsers(uRes.data);
         } catch (userErr) {
-          console.error("Error fetching users:", userErr);
           setError(`Failed to fetch users: ${userErr.message}`);
         }
-
         try {
           const aRes = await axios.get(`${API}/admin/animals`, { headers });
           setAnimals(aRes.data);
         } catch (animalErr) {
-          console.error("Error fetching animals:", animalErr);
           setError(`Failed to fetch animals: ${animalErr.message}`);
         }
       } catch (err) {
-        console.error("API Error:", err);
-
-        // Better error messaging
-        if (err.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          if (err.response.status === 401) {
-            setError("Authentication failed. Please login again.");
-            // Redirect back to login after a brief delay
-            setTimeout(() => {
-              localStorage.removeItem("token");
-              navigate("/login");
-            }, 2000);
-          } else {
-            setError(
-              `Server error: ${err.response.status} - ${
-                err.response.data?.message || "Unknown error"
-              }`
-            );
-          }
-        } else if (err.request) {
-          // The request was made but no response was received
-          setError("No response from server. Please check your connection.");
+        if (err.response && err.response.status === 401) {
+          setError("Authentication failed. Please login again.");
+          setTimeout(() => {
+            localStorage.removeItem("token");
+            navigate("/login");
+          }, 2000);
         } else {
-          // Something happened in setting up the request
           setError(`Error: ${err.message}`);
         }
       }
     };
-
     fetchData();
-  }, [navigate, userRole]); // Add userRole as a dependency
+  }, [navigate, user]);
 
   if (error)
     return (

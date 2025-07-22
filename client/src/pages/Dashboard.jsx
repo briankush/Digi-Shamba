@@ -10,14 +10,17 @@ function Dashboard() {
   const [animals, setAnimals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [typedName, setTypedName] = useState("");
   const [typedMsg, setTypedMsg] = useState("");
   const [editingAnimal, setEditingAnimal] = useState(null);
-  const [userName, setUserName] = useState(
-    localStorage.getItem("userName") || "Farmer"
-  );
+  const [userName, setUserName] = useState("Farmer");
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Update userName state on mount so it reflects the value stored from backend.
+    setUserName(localStorage.getItem("userName") || "Farmer");
+  }, []);
+
+  // Define fullMessage so it is in scope for the render.
   const fullMessage = `Welcome back, ${userName}!`;
 
   useEffect(() => {
@@ -25,9 +28,7 @@ function Dashboard() {
     const interval = setInterval(() => {
       setTypedMsg(fullMessage.slice(0, idx + 1));
       idx++;
-      if (idx > fullMessage.length) {
-        clearInterval(interval);
-      }
+      if (idx > fullMessage.length) clearInterval(interval);
     }, 100); // normal speed
     return () => clearInterval(interval);
   }, [fullMessage]);
@@ -51,7 +52,6 @@ function Dashboard() {
     fetchAnimals();
   }, []);
 
-  // Delete with confirmation
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this animal?")) return;
     try {
@@ -73,7 +73,6 @@ function Dashboard() {
     return <div className="text-center p-8">Loading your animals...</div>;
   }
 
-  // Editing state
   if (editingAnimal) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">

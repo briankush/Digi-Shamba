@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Navbar from "./components/Navbar";
 import PrivateRoute from "./components/PrivateRoute";
@@ -25,92 +26,94 @@ const Profile = lazy(() => import("./pages/Profile"));
 
 function App() {
   return (
-    <Router>
-      <Navbar />
-      <ErrorBoundary>
-        <Suspense fallback={<Loader />}>
-          <Routes>
-            {/* Public Routes - Make sure there's only ONE route for the landing page */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+    <AuthProvider>
+      <Router>
+        <Navbar />
+        <ErrorBoundary>
+          <Suspense fallback={<Loader />}>
+            <Routes>
+              {/* Public Routes - Make sure there's only ONE route for the landing page */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
 
-            {/* Dashboard */}
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
+              {/* Dashboard */}
+              <Route
+                path="/dashboard"
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Analytics */}
-            <Route
-              path="/analytics"
-              element={
-                <PrivateRoute>
-                  <AnalyticsDashboard />
-                </PrivateRoute>
-              }
-            />
+              {/* Analytics */}
+              <Route
+                path="/analytics"
+                element={
+                  <PrivateRoute>
+                    <AnalyticsDashboard />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Daily Records */}
-            <Route
-              path="/daily-records"
-              element={
-                <PrivateRoute>
-                  <DailyRecords />
-                </PrivateRoute>
-              }
-            />
+              {/* Daily Records */}
+              <Route
+                path="/daily-records"
+                element={
+                  <PrivateRoute>
+                    <DailyRecords />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Add Animal */}
-            <Route
-              path="/add-animal"
-              element={
-                <PrivateRoute>
-                  <AddAnimal />
-                </PrivateRoute>
-              }
-            />
+              {/* Add Animal */}
+              <Route
+                path="/add-animal"
+                element={
+                  <PrivateRoute>
+                    <AddAnimal />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Resource Hub & Loans */}
-            <Route path="/resource-hub" element={<ResourceHub />} />
-            <Route path="/loans" element={<LoanResources />} />
+              {/* Resource Hub & Loans */}
+              <Route path="/resource-hub" element={<ResourceHub />} />
+              <Route path="/loans" element={<LoanResources />} />
 
-            {/* Admin */}
-            <Route
-              path="/admin"
-              element={
-                <PrivateRoute>
-                  <Admin />
-                </PrivateRoute>
-              }
-            />
+              {/* Admin */}
+              <Route
+                path="/admin"
+                element={
+                  <PrivateRoute>
+                    <Admin />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Redirect /admin-dashboard to /admin */}
-            <Route
-              path="/admin-dashboard"
-              element={<Navigate to="/admin" replace />}
-            />
+              {/* Redirect /admin-dashboard to /admin */}
+              <Route
+                path="/admin-dashboard"
+                element={<Navigate to="/admin" replace />}
+              />
 
-            {/* Profile Page */}
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute>
-                  <Profile />
-                </PrivateRoute>
-              }
-            />
+              {/* Profile Page */}
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <Profile />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Catch any other routes and redirect to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </ErrorBoundary>
-    </Router>
+              {/* Catch any other routes and redirect to home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
+      </Router>
+    </AuthProvider>
   );
 }
 
