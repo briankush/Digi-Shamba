@@ -31,25 +31,25 @@ export default function Login() {
 
       console.log("Login successful:", response.data);
 
-      // Check using response.data.name instead of response.data.user
-      if (!response.data.name) {
+      // Ensure user data exists
+      if (!response.data.name || !response.data.role) {
         setError("Missing user data in response.");
         setLoading(false);
         return;
       }
 
-      // Store user info using returned top-level keys
+      // Save user info to localStorage
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("userName", response.data.name);
-      localStorage.setItem("userEmail", response.data.userEmail || "");
+      localStorage.setItem("userEmail", response.data.email || "");
       localStorage.setItem("userRole", response.data.role);
 
       // Redirect based on role
       if (response.data.role === "Admin") {
-        console.log("User role is Admin. Redirecting to admin side.");
+        console.log("User role is Admin. Redirecting to admin dashboard.");
         navigate("/admin");
       } else {
-        console.log("User role is Farmer. Redirecting to dashboard.");
+        console.log("User role is Farmer. Redirecting to farmer dashboard.");
         navigate("/dashboard");
       }
     } catch (err) {
@@ -152,7 +152,10 @@ export default function Login() {
             </div>
 
             <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link
+                to="/forgot-password"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
                 Forgot your password?
               </Link>
             </div>
@@ -192,7 +195,10 @@ export default function Login() {
 
         <p className="text-center text-gray-500 text-sm">
           Don't have an account?{" "}
-          <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+          <Link
+            to="/signup"
+            className="font-medium text-indigo-600 hover:text-indigo-500"
+          >
             Sign up
           </Link>
         </p>

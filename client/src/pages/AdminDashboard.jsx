@@ -26,6 +26,16 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, [fullMessage]);
 
+  // If token exists but user is not yet loaded, show a loading indicator.
+  if (localStorage.getItem("token") && user === null) {
+    return <div className="p-8 text-center">Loading user info...</div>;
+  }
+  // Only redirect when user data is available.
+  if (localStorage.getItem("token") && user && user.role.toLowerCase() !== "admin") {
+    navigate("/dashboard");
+    return null;
+  }
+
   useEffect(() => {
     if (!user || user.role.toLowerCase() !== "admin") {
       navigate("/dashboard");
@@ -40,6 +50,7 @@ export default function AdminDashboard() {
     if (API && !API.startsWith("http")) {
       API = `https://${API}`;
     }
+    // Note the endpoints now include '/admin' to match your backend routes.
     const fetchData = async () => {
       try {
         const headers = {
@@ -47,18 +58,12 @@ export default function AdminDashboard() {
           "Content-Type": "application/json",
           Accept: "application/json",
         };
-        try {
-          const uRes = await axios.get(`${API}/admin/users`, { headers });
-          setUsers(uRes.data);
-        } catch (userErr) {
-          setError(`Failed to fetch users: ${userErr.message}`);
-        }
-        try {
-          const aRes = await axios.get(`${API}/admin/animals`, { headers });
-          setAnimals(aRes.data);
-        } catch (animalErr) {
-          setError(`Failed to fetch animals: ${animalErr.message}`);
-        }
+        // Fetch users from the admin endpoint
+        const uRes = await axios.get(`${API}/admin/users`, { headers });
+        setUsers(uRes.data);
+        // Fetch animals from the admin endpoint
+        const aRes = await axios.get(`${API}/admin/animals`, { headers });
+        setAnimals(aRes.data);
       } catch (err) {
         if (err.response && err.response.status === 401) {
           setError("Authentication failed. Please login again.");
