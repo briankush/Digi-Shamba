@@ -1,83 +1,196 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { AiOutlineUser } from "react-icons/ai"; // swapped icon
+import { useNavigate, Link } from "react-router-dom";
+import { AlertCircle, User } from "lucide-react";
 
 // Set axios baseURL from Vite env (if not already set globally)
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 
-function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
-
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setError("");
+
     try {
-      // use relative URL; axios.defaults.baseURL should be set in main.jsx
-      const res = await axios.post("/auth/login", form);
-      // Save token
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("userId", res.data.userId);
-      localStorage.setItem("userName", res.data.name);
-      localStorage.setItem("userRole", res.data.role);
-      // redirect based on role
-      if (res.data.role === "Admin") {
-        navigate("/admin");
+      const API = import.meta.env.VITE_API_BASE_URL;
+      const apiUrl = API.startsWith("http") ? API : `https://${API}`;
+
+      console.log("Sending login request to:", `${apiUrl}/auth/login`);
+
+      const response = await axios.post(`${apiUrl}/auth/login`, {
+        email,
+        password,
+      });
+
+      console.log("Login successful:", response.data);
+
+      if (response.data.user) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("userName", response.data.user.name);
+        localStorage.setItem("userEmail", response.data.user.email);
+        localStorage.setItem("userRole", response.data.user.role);
+
+        if (response.data.user.role === "Admin") {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
+        setError("Login successful, but user data is missing. Please try again.");
+        localStorage.setItem("token", response.data.token);
         navigate("/dashboard");
       }
     } catch (err) {
-      setError("Invalid email or password.");
+      console.error("Login error:", err);
+      if (err.response) {
+        setError(
+          err.response.data?.message || "Login failed. Please check your credentials."
+        );
+      } else if (err.request) {
+        setError("Could not connect to the server. Please try again later.");
+      } else {
+        setError(`An error occurred: ${err.message}`);
+      }
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white text-black">
-      <div className="bg-gray-100 rounded-xl shadow-lg p-8 w-96 flex flex-col items-center border border-gray-300">
-        {/* centered heading with user icon */}
-        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <AiOutlineUser size={24} /> Login
-        </h2>
-        <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
-          <label className="flex flex-col">
-            <span className="text-sm font-medium text-gray-700">Email:</span>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              className="mt-1 px-2 py-1 border rounded-md placeholder:text-gray-400" // rounded-md
-            />
-          </label>
-          <label className="flex flex-col">
-            <span className="text-sm font-medium text-gray-700">Password:</span>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              className="mt-1 px-2 py-1 border rounded-md placeholder:text-gray-400" // rounded-md
-            />
-          </label>
-          {error && <p className="text-red-600 text-sm">{error}</p>}
-          <button
-            type="submit"
-            className="mt-2 px-6 py-2 bg-green-700 text-white rounded hover:bg-green-800"
-          >
-            Login
-          </button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      {/* Card Wrapper */}
+      <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-8 space-y-8">
+        <div className="flex flex-col items-center">
+          {/* User Icon */}
+          <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+            <User size={32} />
+          </div>
+          <h2 className="text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
+        </div>
+
+        {error && (
+          <div className="rounded-md bg-red-100 p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  There was a problem with your login
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <input type="hidden" name="remember" defaultValue="true" />
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="email-address" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="email-address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                Remember me
+              </label>
+            </div>
+
+            <div className="text-sm">
+              <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+                Forgot your password?
+              </Link>
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              disabled={loading}
+            >
+              {loading ? (
+                "Signing in..."
+              ) : (
+                <>
+                  <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                    <svg
+                      className="h-5 w-5 text-green-500 group-hover:text-green-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                  Sign in
+                </>
+              )}
+            </button>
+          </div>
         </form>
+
+        <p className="text-center text-gray-500 text-sm">
+          Don't have an account?{" "}
+          <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+            Sign up
+          </Link>
+        </p>
       </div>
     </div>
   );
 }
-
-export default Login;

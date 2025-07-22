@@ -28,7 +28,7 @@ import axios from "axios";
 // Set axios baseURL from Vite env (move this to main.jsx if not already there)
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 
-function LandingPage() {
+export default function LandingPage() {
   const navigate = useNavigate();
 
   // Add a global axios interceptor for JWT expiration
@@ -71,17 +71,21 @@ function LandingPage() {
   const currentHero = heroImages[heroIndex];
 
   return (
-    <>
+    <div className="landing-page">
       {/* HERO SECTION (slideshow) */}
       <div
         className="relative min-h-screen bg-cover bg-center transition-background duration-1000"
         style={{ backgroundImage: `url(${currentHero})` }}
       >
-        <div className="absolute inset-0 bg-black/50"></div>
-        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen text-white px-4">
+        {/* FIXED NAVBAR OVERLAY */}
+        <div className="fixed top-0 left-0 w-full z-50">
           <Navbar />
+        </div>
+
+        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen text-white px-4 text-center">
           <motion.h1
-            className="text-6xl font-extrabold mb-4 text-center drop-shadow-lg"
+            className="text-6xl font-extrabold mb-4 drop-shadow-lg"
             initial={{ opacity: 0, y: -40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -89,7 +93,7 @@ function LandingPage() {
             Digi-Shamba
           </motion.h1>
           <motion.p
-            className="mb-8 max-w-2xl text-center text-xl leading-relaxed"
+            className="mb-8 max-w-2xl text-xl leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.3 }}
@@ -111,7 +115,6 @@ function LandingPage() {
             >
               Sign Up
             </button>
-            {/* Removed Farmer Loans button here */}
           </div>
         </div>
       </div>
@@ -315,10 +318,6 @@ function LandingPage() {
 
       {/* Place ToastContainer at the root so it works everywhere */}
       <ToastContainer />
-    </>
+    </div>
   );
 }
-
-export default LandingPage;
-
-

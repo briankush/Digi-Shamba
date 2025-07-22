@@ -13,10 +13,11 @@ function Dashboard() {
   const [typedName, setTypedName] = useState("");
   const [typedMsg, setTypedMsg] = useState("");
   const [editingAnimal, setEditingAnimal] = useState(null);
+  const [userName, setUserName] = useState(
+    localStorage.getItem("userName") || "Farmer"
+  );
   const navigate = useNavigate();
 
-  const userEmail = localStorage.getItem("userEmail") || "";
-  const userName = localStorage.getItem("userName") || "Farmer";
   const fullMessage = `Welcome back, ${userName}!`;
 
   useEffect(() => {
