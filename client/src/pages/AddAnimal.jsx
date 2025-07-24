@@ -79,12 +79,14 @@ export default function AddAnimal() {
     e.preventDefault();
     setError("");
     setSuccess("");
+    const { name, breed, type, birthDate, weight, notes } = formData;
     try {
       const API = import.meta.env.VITE_API_BASE_URL;
-      // Remove any trailing slash from API base URL and append the correct route
+      // Remove any trailing slash from the API base URL
       const base = API.replace(/\/$/, "");
-      const url = `${base}/farm-animals`;
-      const animalData = { ...formData, type: selectedType };
+      // Use the correct route: POST /api/farm-animals
+      const url = `${base}/api/farm-animals`;
+      const animalData = { name, breed, type, birthDate, weight, notes };
       const token = localStorage.getItem("token");
       const headers = {
         Authorization: `Bearer ${token}`,

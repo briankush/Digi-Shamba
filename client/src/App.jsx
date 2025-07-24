@@ -22,6 +22,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Admin = lazy(() => import("./pages/AdminDashboard"));
 const AddAnimal = lazy(() => import("./pages/AddAnimal"));
 const Profile = lazy(() => import("./pages/Profile"));
+const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard"));
 
 function App() {
   return (
@@ -42,6 +43,16 @@ function App() {
                 element={
                   <PrivateRoute>
                     <Dashboard />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Analytics - accessible to non-admin users */}
+              <Route
+                path="/analytics"
+                element={
+                  <PrivateRoute>
+                    <AnalyticsDashboard />
                   </PrivateRoute>
                 }
               />
@@ -105,4 +116,4 @@ function App() {
 }
 
 export default App;
-             
+
