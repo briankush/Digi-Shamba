@@ -13,7 +13,7 @@ app.use(express.json());
 
 app.use("/api/auth", require('./routes/authRoutes'));
 const farmAnimalRoutes = require("./routes/farmAnimalRoutes");
-// Mount the farm animals route so that POST/GET requests to /api/farm-animals work correctly
+// Mount the farm animal routes under /api/farm-animals
 app.use("/api/farm-animals", farmAnimalRoutes);
 app.use("/api/admin", require('./routes/adminRoutes'));
 const analyticsRoutes = require("./routes/analyticsRoutes");
@@ -22,7 +22,7 @@ const dailyRecordRoutes = require("./routes/dailyRecordRoutes");
 app.use("/api/daily-records", dailyRecordRoutes);
 const authRoutes = require("./routes/authRoutes");
 app.use("/auth", authRoutes);
-const animalRoutes = require("./routes/animalRoutes");
+const animalRoutes = require("./routes/farmAnimalRoutes");
 app.use("/api/animals", animalRoutes);
 
 
