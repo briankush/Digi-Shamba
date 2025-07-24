@@ -6,7 +6,7 @@ import { FaCow } from "react-icons/fa6";
 import { AuthContext } from "../context/AuthContext";
 
 export default function AdminDashboard() {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [animals, setAnimals] = useState([]);
@@ -36,48 +36,53 @@ export default function AdminDashboard() {
     return null;
   }
 
+  // Redirect if the current user is loaded and not an admin:
   useEffect(() => {
-    if (!user || user.role.toLowerCase() !== "admin") {
-      navigate("/dashboard");
-      return;
-    }
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-    let API = import.meta.env.VITE_API_BASE_URL;
-    if (API && !API.startsWith("http")) {
-      API = `https://${API}`;
-    }
-    // Note the endpoints now include '/admin' to match your backend routes.
-    const fetchData = async () => {
-      try {
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        };
-        // Fetch users from the admin endpoint
-        const uRes = await axios.get(`${API}/admin/users`, { headers });
-        setUsers(uRes.data);
-        // Fetch animals from the admin endpoint
-        const aRes = await axios.get(`${API}/admin/animals`, { headers });
-        setAnimals(aRes.data);
-      } catch (err) {
-        if (err.response && err.response.status === 401) {
-          setError("Authentication failed. Please login again.");
-          setTimeout(() => {
-            localStorage.removeItem("token");
-            navigate("/login");
-          }, 2000);
-        } else {
-          setError(`Error: ${err.message}`);
-        }
+    if (!loading && user) {
+      if (user.role.toLowerCase() !== "admin") {
+        navigate("/dashboard");
       }
-    };
-    fetchData();
-  }, [navigate, user]);
+    }
+  }, [loading, user, navigate]);
+
+  // Fetch admin data
+  useEffect(() => {
+    if (!loading && user && user.role.toLowerCase() === "admin") {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+      let API = import.meta.env.VITE_API_BASE_URL;
+      if (API && !API.startsWith("http")) {
+        API = `https://${API}`;
+      }
+      const fetchData = async () => {
+        try {
+          const headers = {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          };
+          const uRes = await axios.get(`${API}/admin/users`, { headers });
+          setUsers(uRes.data);
+          const aRes = await axios.get(`${API}/admin/animals`, { headers });
+          setAnimals(aRes.data);
+        } catch (err) {
+          if (err.response && err.response.status === 401) {
+            setError("Authentication failed. Please login again.");
+            setTimeout(() => {
+              localStorage.removeItem("token");
+              navigate("/login");
+            }, 2000);
+          } else {
+            setError(`Error: ${err.message}`);
+          }
+        }
+      };
+      fetchData();
+    }
+  }, [loading, user, navigate]);
 
   if (error)
     return (

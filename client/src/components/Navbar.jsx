@@ -82,18 +82,20 @@ export default function Navbar() {
               </NavLink>
 
               {/* Analytics - visible to everyone */}
-              <NavLink
-                to="/analytics"
-                className={({ isActive }) =>
-                  `px-3 py-2 rounded-md ${
-                    isActive ? activeStyle : normalStyle
-                  }`
-                }
-              >
-                <span className="flex items-center gap-2">
-                  <AiOutlineBarChart /> Analytics
-                </span>
-              </NavLink>
+              {!isAdmin && (
+                <NavLink
+                  to="/analytics"
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded-md ${
+                      isActive ? activeStyle : normalStyle
+                    }`
+                  }
+                >
+                  <span className="flex items-center gap-2">
+                    <AiOutlineBarChart /> Analytics
+                  </span>
+                </NavLink>
+              )}
 
               {/* Links only visible to farmers (non-admins) */}
               {!isAdmin && (
@@ -250,19 +252,22 @@ export default function Navbar() {
                 </span>
               </NavLink>
 
-              <NavLink
-                to="/analytics"
-                className={({ isActive }) =>
-                  `block px-4 py-3 ${
-                    isActive ? "bg-green-100 text-green-700" : "text-gray-800 hover:bg-gray-100"
-                  }`
-                }
-                onClick={() => setOpen(false)}
-              >
-                <span className="flex items-center gap-2">
-                  <AiOutlineBarChart /> Analytics
-                </span>
-              </NavLink>
+              {/* Analytics link only for non-admins */}
+              {!isAdmin && (
+                <NavLink
+                  to="/analytics"
+                  className={({ isActive }) =>
+                    `block px-4 py-3 ${
+                      isActive ? "bg-green-100 text-green-700" : "text-gray-800 hover:bg-gray-100"
+                    }`
+                  }
+                  onClick={() => setOpen(false)}
+                >
+                  <span className="flex items-center gap-2">
+                    <AiOutlineBarChart /> Analytics
+                  </span>
+                </NavLink>
+              )}
 
               {/* Links only for farmers */}
               {!isAdmin && (

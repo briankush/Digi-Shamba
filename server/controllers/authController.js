@@ -76,3 +76,12 @@ exports.logout = async (req, res) => {
         res.status(500).json({message: "Server error during logout"});
     }
 };
+
+// Get current user
+exports.getMe = (req, res) => {
+  if (req.user) {
+    res.json({ user: req.user });
+  } else {
+    res.status(404).json({ message: "User not found" });
+  }
+};

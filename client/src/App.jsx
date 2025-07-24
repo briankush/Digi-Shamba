@@ -15,7 +15,6 @@ import Loader from "./components/Loader";
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
-const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard"));
 const DailyRecords = lazy(() => import("./pages/DailyRecords"));
 const ResourceHub = lazy(() => import("./pages/ResourceHub"));
 const LoanResources = lazy(() => import("./components/LoanResources"));
@@ -43,16 +42,6 @@ function App() {
                 element={
                   <PrivateRoute>
                     <Dashboard />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Analytics */}
-              <Route
-                path="/analytics"
-                element={
-                  <PrivateRoute>
-                    <AnalyticsDashboard />
                   </PrivateRoute>
                 }
               />
@@ -116,3 +105,4 @@ function App() {
 }
 
 export default App;
+             

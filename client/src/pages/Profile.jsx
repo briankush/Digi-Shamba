@@ -1,19 +1,22 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import axios from "axios";
 
 export default function ProfileDropdown() {
-  const { user, loading } = useContext(AuthContext);
+  const { user, loading: authLoading } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("Guest");
   const [email, setEmail] = useState("Not Provided");
   const [role, setRole] = useState("User");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("ProfileDropdown useEffect: user =", user);
     if (user) {
-      // Use fallback values if fields are empty
       setName(user.name || "Guest");
       setEmail(
         user.email && user.email.trim() !== ""
@@ -21,6 +24,7 @@ export default function ProfileDropdown() {
           : "Not Provided"
       );
       setRole(user.role || "User");
+      setLoading(false);
     } else {
       setName(localStorage.getItem("userName") || "Guest");
       setEmail(
@@ -30,8 +34,62 @@ export default function ProfileDropdown() {
           : "Not Provided"
       );
       setRole(localStorage.getItem("userRole") || "User");
+      setLoading(false);
     }
-  }, [user, loading]);
+  }, [user, authLoading]);
+
+  // Fetch user details from backend
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("No token found. Please login.");
+      setLoading(false);
+      return;
+    }
+    // Get baseUrl from environment and remove trailing slash.
+    let baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "");
+    // If backend expects the endpoint without '/api', remove '/api' from baseUrl.
+    if (baseUrl.includes("/api")) {
+      baseUrl = baseUrl.replace("/api", "");
+    }
+    console.log("Using baseUrl for profile fetch:", baseUrl);
+    // Adjust the endpoint if necessary; here we call /auth/me
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`${baseUrl}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = res.data.user || res.data;
+        // Check for missing fields from the backend and log warnings.
+        const missingFields = [];
+        if (!data.name) missingFields.push("name");
+        if (!data.email) missingFields.push("email");
+        if (!data.role) missingFields.push("role");
+        if (missingFields.length > 0) {
+          console.warn(
+            "Backend response is missing field(s):",
+            missingFields.join(", ")
+          );
+        }
+        setName(data.name || "Guest");
+        setEmail(
+          data.email && data.email.trim() !== ""
+            ? data.email
+            : "Not Provided"
+        );
+        setRole(data.role || "User");
+      } catch (err) {
+        setError(
+          "Failed to fetch profile. " +
+            (err.response?.data?.message || err.message)
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   // Toggle dropdown
   const toggleDropdown = () => setIsOpen((prev) => !prev);
@@ -65,6 +123,9 @@ export default function ProfileDropdown() {
 
   if (loading) {
     return <div className="p-8 text-center">Loading profile...</div>;
+  }
+  if (error) {
+    return <div className="p-8 text-center text-red-500">{error}</div>;
   }
   if (!user) {
     return <div className="p-8 text-center">No user data available.</div>;
