@@ -79,15 +79,19 @@ export default function AddAnimal() {
     e.preventDefault();
     setError("");
     setSuccess("");
-    setLoading(true);
     try {
       const API = import.meta.env.VITE_API_BASE_URL;
+      // Remove any trailing slash from API base URL and append the correct route
+      const base = API.replace(/\/$/, "");
+      const url = `${base}/farm-animals`;
+      const animalData = { ...formData, type: selectedType };
       const token = localStorage.getItem("token");
-      await axios.post(
-        `${API}/animals`,
-        { ...formData, type: selectedType },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
+      const res = await axios.post(url, animalData, { headers });
+      console.log("Animal created:", res.data);
       setSuccess("Animal added successfully!");
       setFormData({
         name: "",
@@ -97,7 +101,11 @@ export default function AddAnimal() {
         notes: "",
       });
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to add animal");
+      console.error("Failed to create animal:", err);
+      setError(
+        err.response?.data?.message ||
+        "An error occurred while adding the animal."
+      );
     } finally {
       setLoading(false);
     }
@@ -260,4 +268,3 @@ export default function AddAnimal() {
     </div>
   );
 }
-  

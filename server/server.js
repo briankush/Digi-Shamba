@@ -12,7 +12,9 @@ app.use(express.json());
 
 
 app.use("/api/auth", require('./routes/authRoutes'));
-app.use("/api/farm-animals", require('./routes/farmAnimalRoutes'));
+const farmAnimalRoutes = require("./routes/farmAnimalRoutes");
+// Mount the farm animals route so that POST/GET requests to /api/farm-animals work correctly
+app.use("/api/farm-animals", farmAnimalRoutes);
 app.use("/api/admin", require('./routes/adminRoutes'));
 const analyticsRoutes = require("./routes/analyticsRoutes");
 app.use("/api/analytics", analyticsRoutes);
@@ -20,6 +22,8 @@ const dailyRecordRoutes = require("./routes/dailyRecordRoutes");
 app.use("/api/daily-records", dailyRecordRoutes);
 const authRoutes = require("./routes/authRoutes");
 app.use("/auth", authRoutes);
+const animalRoutes = require("./routes/animalRoutes");
+app.use("/api/animals", animalRoutes);
 
 
 const PORT = process.env.PORT || 5000;
