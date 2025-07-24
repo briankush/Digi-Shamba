@@ -49,6 +49,10 @@ Here are some screenshots of the application:
 ![Screenshot 7](./client/src/images/screenshot(382).png)
 ![Screenshot 8](./client/src/images/screenshot(383).png)
 
+## Demo Video
+
+Check out the demo video [here](https://drive.google.com/file/d/1XW3Nuo58AfgEEZ6CStt67znfzNthLw2P/view) for a walkthrough of the application.
+
 ## Setup & Installation
 
 ### Prerequisites
@@ -116,14 +120,6 @@ pnpm run dev
 Or use `npm run dev` if you prefer npm.
 
 ## Contributing
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
-
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-- Inspired by the need for efficient farm management solutions
-- Designed for farmers and administrators seeking modern technological solutions
 Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
 
 ## License
