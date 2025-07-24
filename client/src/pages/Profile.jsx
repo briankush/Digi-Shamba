@@ -1,19 +1,37 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 export default function ProfileDropdown() {
+  const { user, loading } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("");
+  const [name, setName] = useState("Guest");
+  const [email, setEmail] = useState("Not Provided");
+  const [role, setRole] = useState("User");
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    setName(localStorage.getItem("userName") || "Guest");
-    setEmail(localStorage.getItem("userEmail") || "guest@example.com");
-    setRole(localStorage.getItem("userRole") || "User");
-  }, []);
+    if (user) {
+      // Use fallback values if fields are empty
+      setName(user.name || "Guest");
+      setEmail(
+        user.email && user.email.trim() !== ""
+          ? user.email
+          : "Not Provided"
+      );
+      setRole(user.role || "User");
+    } else {
+      setName(localStorage.getItem("userName") || "Guest");
+      setEmail(
+        localStorage.getItem("userEmail") &&
+          localStorage.getItem("userEmail").trim() !== ""
+          ? localStorage.getItem("userEmail")
+          : "Not Provided"
+      );
+      setRole(localStorage.getItem("userRole") || "User");
+    }
+  }, [user, loading]);
 
   // Toggle dropdown
   const toggleDropdown = () => setIsOpen((prev) => !prev);
@@ -41,13 +59,16 @@ export default function ProfileDropdown() {
     navigate("/login");
   };
 
-  // Avatar color based on role
+  // Avatar background color based on role
   const roleColor =
-    role.toLowerCase() === "admin"
-      ? "bg-red-400"
-      : role.toLowerCase() === "manager"
-      ? "bg-blue-400"
-      : "bg-green-400";
+    role.toLowerCase() === "admin" ? "bg-red-400" : "bg-green-400";
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading profile...</div>;
+  }
+  if (!user) {
+    return <div className="p-8 text-center">No user data available.</div>;
+  }
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -62,7 +83,7 @@ export default function ProfileDropdown() {
 
       {/* Dropdown Menu */}
       <div
-        className={`absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg p-4 z-50 transform transition-all duration-200 ${
+        className={`absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg p-4 z-50 transform transition-all duration-200 ${
           isOpen
             ? "opacity-100 scale-100"
             : "opacity-0 scale-95 pointer-events-none"
