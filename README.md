@@ -128,3 +128,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 - Inspired by the need for efficient farm management solutions
 - Designed for farmers and administrators seeking modern technological solutions
+
+
