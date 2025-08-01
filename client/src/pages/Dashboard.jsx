@@ -4,9 +4,7 @@ import axios from "axios";
 import AnimalForm from "../components/AnimalForm";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 
-const API = import.meta.env.VITE_API_BASE_URL;
-
-function Dashboard() {
+export default function Dashboard() {
   const [animals, setAnimals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -33,24 +31,37 @@ function Dashboard() {
     return () => clearInterval(interval);
   }, [fullMessage]);
 
-  const fetchAnimals = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(`${API}/farm-animals`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setAnimals(res.data);
-    } catch (err) {
-      setError("Failed to load animals");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchAnimals = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "");
+        console.log("Fetching animals from:", `${baseUrl}/farm-animals`);
+
+        const response = await axios.get(`${baseUrl}/farm-animals`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        console.log("Animals response:", response.data);
+        setAnimals(response.data || []);
+      } catch (err) {
+        console.error("Error fetching animals:", err);
+        setError(
+          "Failed to load animals. " + (err.response?.data?.message || err.message)
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchAnimals();
-  }, []);
+  }, []); // Removed navigate from dependencies to prevent loops
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this animal?")) return;
@@ -70,7 +81,24 @@ function Dashboard() {
   };
 
   if (loading) {
-    return <div className="text-center p-8">Loading your animals...</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p>Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow text-center text-red-600">
+          {error}
+        </div>
+      </div>
+    );
   }
 
   if (editingAnimal) {
@@ -176,8 +204,6 @@ function Dashboard() {
     </div>
   );
 }
-
-export default Dashboard;
 
 
 

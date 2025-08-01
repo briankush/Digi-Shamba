@@ -6,11 +6,12 @@ import { FaCow } from "react-icons/fa6";
 import { AuthContext } from "../context/AuthContext";
 
 export default function AdminDashboard() {
-  const { user, loading } = useContext(AuthContext);
+  const { user, loading: userLoading } = useContext(AuthContext);
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [animals, setAnimals] = useState([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const adminName = user ? user.name : "Admin";
   const fullMessage = `Welcome back, ${adminName}!`;
@@ -38,16 +39,16 @@ export default function AdminDashboard() {
 
   // Redirect if the current user is loaded and not an admin:
   useEffect(() => {
-    if (!loading && user) {
+    if (!userLoading && user) {
       if (user.role.toLowerCase() !== "admin") {
         navigate("/dashboard");
       }
     }
-  }, [loading, user, navigate]);
+  }, [userLoading, user, navigate]);
 
   // Fetch admin data
   useEffect(() => {
-    if (!loading && user && user.role.toLowerCase() === "admin") {
+    if (!userLoading && user && user.role.toLowerCase() === "admin") {
       const token = localStorage.getItem("token");
       if (!token) {
         navigate("/login");
@@ -68,6 +69,7 @@ export default function AdminDashboard() {
           setUsers(uRes.data);
           const aRes = await axios.get(`${API}/admin/animals`, { headers });
           setAnimals(aRes.data);
+          setLoading(false); // Add this line to turn off loading when done
         } catch (err) {
           if (err.response && err.response.status === 401) {
             setError("Authentication failed. Please login again.");
@@ -77,12 +79,24 @@ export default function AdminDashboard() {
             }, 2000);
           } else {
             setError(`Error: ${err.message}`);
+            setLoading(false); // Also turn off loading on error
           }
         }
       };
       fetchData();
     }
-  }, [loading, user, navigate]);
+  }, [userLoading, user, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p>Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error)
     return (

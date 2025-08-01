@@ -82,13 +82,24 @@ export default function AddAnimal() {
     setLoading(true);
     try {
       const API = import.meta.env.VITE_API_BASE_URL;
-      // Remove any trailing slash
       let base = API.replace(/\/$/, "");
-      // If base already contains '/api', then do not append '/api' again.
-      const url = base.includes("/api")
-        ? `${base}/farm-animals`
-        : `${base}/api/farm-animals`;
-        
+      
+      // Ensure we're using the correct endpoint
+      const url = `${base}/farm-animals`;
+      
+      console.log("Submitting animal data to:", url);
+      console.log("Animal data:", { 
+        name: formData.name, 
+        breed: formData.breed, 
+        type: selectedType, 
+        birthDate: formData.birthDate, 
+        weight: formData.weight, 
+        notes: formData.notes 
+      });
+      
+      const token = localStorage.getItem("token");
+      console.log("Using token:", token ? "Token exists" : "No token");
+      
       const animalData = { 
         name: formData.name, 
         breed: formData.breed, 
@@ -97,21 +108,21 @@ export default function AddAnimal() {
         weight: formData.weight, 
         notes: formData.notes 
       };
-      const token = localStorage.getItem("token");
+      
       const headers = {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       };
+      
       const res = await axios.post(url, animalData, { headers });
       console.log("Animal created:", res.data);
+      
+      // Successfully created animal - now navigate to dashboard to see it
       setSuccess("Animal added successfully!");
-      setFormData({
-        name: "",
-        breed: "",
-        birthDate: "",
-        weight: "",
-        notes: "",
-      });
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1000);
+      
     } catch (err) {
       console.error("Failed to create animal:", err);
       setError(

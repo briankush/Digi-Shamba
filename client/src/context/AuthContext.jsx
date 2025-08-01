@@ -12,11 +12,15 @@ export function AuthProvider({ children }) {
     const role = localStorage.getItem("userRole");
     const email = localStorage.getItem("userEmail");
 
-    if (token && role) {
+    if (token) {
       setUser({ token, name, role, email });
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
+
+  // Debug what's happening
+  console.log("AuthContext state:", { user, loading });
 
   return (
     <AuthContext.Provider value={{ user, setUser, loading }}>

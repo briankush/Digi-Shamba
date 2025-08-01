@@ -20,10 +20,8 @@ const analyticsRoutes = require("./routes/analyticsRoutes");
 app.use("/api/analytics", analyticsRoutes);
 const dailyRecordRoutes = require("./routes/dailyRecordRoutes");
 app.use("/api/daily-records", dailyRecordRoutes);
-const authRoutes = require("./routes/authRoutes");
-app.use("/api/auth", authRoutes);
-const animalRoutes = require("./routes/farmAnimalRoutes");
-app.use("/api/animals", animalRoutes);
+// Use farmAnimalRoutes for the /animals endpoint too
+app.use("/api/animals", farmAnimalRoutes);
 
 
 const PORT = process.env.PORT || 5000;

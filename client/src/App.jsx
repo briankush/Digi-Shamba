@@ -38,6 +38,16 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
 
+              {/* Profile - Make sure this is defined BEFORE any catch-all routes */}
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <Profile />
+                  </PrivateRoute>
+                }
+              />
+
               {/* Dashboard */}
               <Route
                 path="/dashboard"
@@ -96,16 +106,6 @@ function App() {
                 element={<Navigate to="/admin" replace />}
               />
 
-              {/* Profile */}
-              <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
-                    <Profile />
-                  </PrivateRoute>
-                }
-              />
-
               {/* Change Password */}
               <Route
                 path="/change-password"
@@ -116,7 +116,7 @@ function App() {
                 }
               />
 
-              {/* Catch-all */}
+              {/* Catch-all - Make sure this is AFTER all defined routes */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>

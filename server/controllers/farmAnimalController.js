@@ -5,19 +5,35 @@ const FarmAnimal = require("../models/farmAnimal");
 // Create a new farm animal
 exports.createAnimal = async (req, res) => {
   try {
+    console.log("Creating animal with data:", req.body);
+    console.log("Current user:", req.user);
+    
     const { name, breed, type, birthDate, weight, notes } = req.body;
-    // Replace the following with your database insertion logic
-    const newAnimal = {
-      _id: "generatedId", // Should come from the database
+    
+    // Verify that owner ID is properly formatted
+    if (!req.user || !req.user.id) {
+      console.error("User ID not available in request");
+      return res.status(400).json({ message: "User identification failed" });
+    }
+    
+    // Create animal with explicit owner field
+    const newAnimal = new FarmAnimal({
       name,
       breed,
       type,
       birthDate,
       weight,
       notes,
-    };
-    res.status(201).json(newAnimal);
+      owner: req.user.id
+    });
+    
+    console.log("Animal to be saved:", newAnimal);
+    const savedAnimal = await newAnimal.save();
+    console.log("Animal saved successfully with ID:", savedAnimal._id);
+    
+    res.status(201).json(savedAnimal);
   } catch (err) {
+    console.error("Error creating animal:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -25,12 +41,30 @@ exports.createAnimal = async (req, res) => {
 // Get all farm animals for the logged-in user
 exports.getAllAnimals = async (req, res) => {
   try {
-    console.log("Authenticated user ID:", req.user.id);
-
-    // Fetch animals owned by the logged-in user
+    console.log("getAllAnimals called");
+    console.log("User from request:", req.user);
+    
+    if (!req.user || !req.user.id) {
+      console.error("User ID not available");
+      return res.status(400).json({ message: "User identification failed" });
+    }
+    
+    // Add debugging to show what we're querying for
+    console.log("Querying animals with owner ID:", req.user.id);
+    console.log("Owner ID type:", typeof req.user.id);
+    
+    // Check if the ID is a valid ObjectId
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(req.user.id);
+    console.log("Is valid ObjectId:", isValidObjectId);
+    
+    // Get all animals in DB first to check if they exist at all
+    const allAnimals = await FarmAnimal.find({});
+    console.log("All animals in DB:", allAnimals.length);
+    
+    // Now query for user's animals
     const animals = await FarmAnimal.find({ owner: req.user.id });
-    console.log("Database returned animals:", animals);
-
+    console.log("User's animals found:", animals.length);
+    
     return res.json(animals);
   } catch (error) {
     console.error("Error in getAllAnimals:", error);
