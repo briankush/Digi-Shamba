@@ -76,12 +76,6 @@ export default function Profile() {
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-8">
         <h1 className="text-3xl font-bold mb-6 text-green-800">Your Profile</h1>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
-
         {profileData && (
           <>
             <div className="flex items-center mb-8">
@@ -142,6 +136,12 @@ export default function Profile() {
             Logout
           </button>
         </div>
+        {/* Show error if present */}
+        {error && (
+          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-md">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );

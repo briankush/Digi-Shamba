@@ -21,11 +21,9 @@ export default function PasswordUpdateForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Reset messages
     setError('');
     setSuccess('');
 
-    // Validation
     if (formData.newPassword !== formData.confirmPassword) {
       return setError("New passwords don't match");
     }
@@ -38,26 +36,7 @@ export default function PasswordUpdateForm() {
 
     try {
       const token = localStorage.getItem('token');
-
-      // For debugging only - create a simple success message without making an actual API call
-      // This allows you to test the UI flow while the backend is being updated
-      console.log("Password update feature is being implemented on the server");
-      console.log("Current password:", formData.currentPassword);
-      console.log("New password:", formData.newPassword);
-
-      // Show success message even though we didn't actually update the password
-      setSuccess('Password update simulation successful! The real feature will be available after server redeployment.');
-      setFormData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-
-      // Note: Remove this simulation code and uncomment the actual API call when the server is ready
-      /*
       const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "");
-      console.log("Making password update request to:", `${baseUrl}/auth/password`);
-
       const response = await axios.put(
         `${baseUrl}/auth/password`,
         {
@@ -66,21 +45,17 @@ export default function PasswordUpdateForm() {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      console.log("Password update response:", response.data);
-
       setSuccess('Password updated successfully!');
       setFormData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
-      */
     } catch (err) {
-      console.error("Password update error:", err);
       setError(
         err.response?.data?.message ||
-        'Failed to update password. The server needs to be redeployed with the new route.'
+        err.response?.data?.details ||
+        'Failed to update password. Please try again.'
       );
     } finally {
       setLoading(false);
