@@ -15,12 +15,10 @@ exports.getAllAnimals = async (req, res) => {
       console.error("No user object in request");
       return res.status(401).json({ message: "User not authenticated" });
     }
-    
     if (!req.user.id) {
       console.error("No user ID found in request");
       return res.status(401).json({ message: "User not authenticated" });
     }
-    
     if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
       return res.status(400).json({ message: "Invalid user ID" });
     }
@@ -119,50 +117,49 @@ exports.getAnimalById = async (req, res) => {
     
     if (!mongoose.Types.ObjectId.isValid(animalId)) {
       return res.status(400).json({ message: "Invalid animal ID format" });
-    }onst animal = await FarmAnimal.findOne({
-      _id: animalId,
     }
-    
     const animal = await FarmAnimal.findOne({
-      _id: animalId,l) {
-      owner: userId  return res.status(404).json({ message: "Animal not found" });
+      _id: animalId,
+      owner: userId
     }).lean();
-    
-    if (!animal) {es.json(animal);
-      return res.status(404).json({ message: "Animal not found" });catch (error) {
-    }ror fetching animal by ID:", error);
-    .json({ message: "Server error", details: error.message });
+    if (!animal) {
+      return res.status(404).json({ message: "Animal not found" });
+    }
     res.json(animal);
   } catch (error) {
     console.error("Error fetching animal by ID:", error);
-    res.status(500).json({ message: "Server error", details: error.message }); Update an animal by ID
-  }exports.updateAnimal = async (req, res) => {
+    res.status(500).json({ message: "Server error", details: error.message });
+  }
 };
-ndUpdate(
-// Update an animal by ID _id: req.params.id, owner: req.user._id },
+
+// Update an animal by ID
 exports.updateAnimal = async (req, res) => {
   try {
+    const userId = req.user.id || req.user._id;
     const animal = await FarmAnimal.findOneAndUpdate(
-      { _id: req.params.id, owner: req.user._id },
-      req.body,return res.status(404).json({ error: 'Animal not found' });
+      { _id: req.params.id, owner: userId },
+      req.body,
       { new: true, runValidators: true }
     );
-    if (!animal) {atch (error) {
-      return res.status(404).json({ error: 'Animal not found' });son({ error: error.message });
+    if (!animal) {
+      return res.status(404).json({ error: 'Animal not found' });
     }
     res.json(animal);
   } catch (error) {
-    res.status(400).json({ error: error.message }); Delete an animal by ID
-  }exports.deleteAnimal = async (req, res) => {
+    res.status(400).json({ error: error.message });
+  }
 };
-ndDelete({ _id: req.params.id, owner: req.user._id });
-// Delete an animal by ID(!animal) {
+
+// Delete an animal by ID
 exports.deleteAnimal = async (req, res) => {
   try {
-    const animal = await FarmAnimal.findOneAndDelete({ _id: req.params.id, owner: req.user._id });
-    if (!animal) {atch (error) {
+    const userId = req.user.id || req.user._id;
+    const animal = await FarmAnimal.findOneAndDelete({ _id: req.params.id, owner: userId });
+    if (!animal) {
       return res.status(404).json({ error: 'Animal not found' });
     }
-    res.json({ message: 'Animal deleted successfully' });  } catch (error) {    res.status(500).json({ error: error.message });
+    res.json({ message: 'Animal deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
