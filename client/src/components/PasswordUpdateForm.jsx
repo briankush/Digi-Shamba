@@ -37,6 +37,8 @@ export default function PasswordUpdateForm() {
     try {
       const token = localStorage.getItem('token');
       const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "");
+      // Log the endpoint for debugging
+      console.log("Password update endpoint:", `${baseUrl}/auth/password`);
       const response = await axios.put(
         `${baseUrl}/auth/password`,
         {
@@ -52,9 +54,12 @@ export default function PasswordUpdateForm() {
         confirmPassword: ''
       });
     } catch (err) {
+      // Log the error for debugging
+      console.error("Password update error:", err);
       setError(
         err.response?.data?.message ||
         err.response?.data?.details ||
+        err.message ||
         'Failed to update password. Please try again.'
       );
     } finally {

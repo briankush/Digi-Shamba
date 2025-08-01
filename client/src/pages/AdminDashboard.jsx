@@ -1,18 +1,19 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 import { Users, AlertCircle } from "lucide-react";
 import { FaCow } from "react-icons/fa6";
-import { AuthContext } from "../context/AuthContext";
 
 export default function AdminDashboard() {
-  const { user, loading: userLoading } = useContext(AuthContext);
+  const { user, loading: authLoading } = useContext(AuthContext);
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [animals, setAnimals] = useState([]);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
+  // Greeting message logic
   const adminName = user ? user.name : "Admin";
   const fullMessage = `Welcome back, ${adminName}!`;
   const [typedMsg, setTypedMsg] = useState("");
@@ -27,83 +28,70 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, [fullMessage]);
 
-  // If token exists but user is not yet loaded, show a loading indicator.
-  if (localStorage.getItem("token") && user === null) {
-    return <div className="p-8 text-center">Loading user info...</div>;
-  }
-  // Only redirect when user data is available.
-  if (localStorage.getItem("token") && user && user.role.toLowerCase() !== "admin") {
-    navigate("/dashboard");
-    return null;
-  }
-
-  // Redirect if the current user is loaded and not an admin:
   useEffect(() => {
-    if (!userLoading && user) {
-      if (user.role.toLowerCase() !== "admin") {
-        navigate("/dashboard");
-      }
+    if (authLoading) return; // Wait for AuthContext to finish loading
+    if (!user) {
+      navigate("/login");
+      return;
     }
-  }, [userLoading, user, navigate]);
-
-  // Fetch admin data
-  useEffect(() => {
-    if (!userLoading && user && user.role.toLowerCase() === "admin") {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-      let API = import.meta.env.VITE_API_BASE_URL;
-      if (API && !API.startsWith("http")) {
-        API = `https://${API}`;
-      }
-      const fetchData = async () => {
-        try {
-          const headers = {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          };
-          const uRes = await axios.get(`${API}/admin/users`, { headers });
-          setUsers(uRes.data);
-          const aRes = await axios.get(`${API}/admin/animals`, { headers });
-          setAnimals(aRes.data);
-          setLoading(false); // Add this line to turn off loading when done
-        } catch (err) {
-          if (err.response && err.response.status === 401) {
-            setError("Authentication failed. Please login again.");
-            setTimeout(() => {
-              localStorage.removeItem("token");
-              navigate("/login");
-            }, 2000);
-          } else {
-            setError(`Error: ${err.message}`);
-            setLoading(false); // Also turn off loading on error
-          }
-        }
-      };
-      fetchData();
+    if (user.role.toLowerCase() !== "admin") {
+      navigate("/dashboard");
+      return;
     }
-  }, [userLoading, user, navigate]);
 
-  if (loading) {
+    const fetchData = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = localStorage.getItem("token");
+        const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "");
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
+
+        // Fetch users
+        const usersRes = await axios.get(`${baseUrl}/admin/users`, { headers });
+        setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
+
+        // Fetch animals
+        const animalsRes = await axios.get(`${baseUrl}/admin/animals`, { headers });
+        setAnimals(Array.isArray(animalsRes.data) ? animalsRes.data : []);
+
+        setLoading(false);
+      } catch (err) {
+        setError(
+          err.response?.data?.message ||
+          err.response?.data?.details ||
+          "Failed to fetch admin data."
+        );
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user, authLoading, navigate]);
+
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white p-8 rounded-lg shadow text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-          <p>Loading dashboard data...</p>
+          <p>Loading admin dashboard...</p>
         </div>
       </div>
     );
   }
 
-  if (error)
+  if (error) {
     return (
-      <div className="p-8 text-center text-red-600 font-semibold flex justify-center items-center gap-2">
-        <AlertCircle className="w-6 h-6" /> {error}
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow text-center text-red-600">
+          {error}
+        </div>
       </div>
     );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 p-6 sm:p-10 pt-20">
