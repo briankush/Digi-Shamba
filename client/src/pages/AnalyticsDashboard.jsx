@@ -360,6 +360,9 @@ export default function AnalyticsDashboard() {
           className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 inline-flex items-center gap-2"
         >
           <FaCalendarAlt /> View Daily Records
+        </button>
+      </div>
+
       {/* Line Chart */}
       <div className="bg-white p-4 rounded-lg shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Profit/Loss Trend</h2>
