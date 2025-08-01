@@ -28,9 +28,12 @@ const farmAnimalSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  },
+  }
 }, {
   timestamps: true
 });
+
+// Add index for faster querying by owner
+farmAnimalSchema.index({ owner: 1 });
 
 module.exports = mongoose.model('FarmAnimal', farmAnimalSchema);

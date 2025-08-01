@@ -31,48 +31,67 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [fullMessage]);
 
-  useEffect(() => {
-    const fetchAnimals = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/login");
-          return;
-        }
+  // Add a fetchAnimals function that can be called from useEffect and other places
+  const fetchAnimals = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "");
-        console.log("Fetching animals from:", `${baseUrl}/farm-animals`);
-
-        const response = await axios.get(`${baseUrl}/farm-animals`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        console.log("Animals response:", response.data);
-        setAnimals(response.data || []);
-      } catch (err) {
-        console.error("Error fetching animals:", err);
-        setError(
-          "Failed to load animals. " + (err.response?.data?.message || err.message)
-        );
-      } finally {
-        setLoading(false);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
       }
-    };
 
+      const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "");
+      console.log("Fetching animals from:", `${baseUrl}/farm-animals`);
+      console.log("Using token:", token.substring(0, 15) + "...");
+
+      const response = await axios.get(`${baseUrl}/farm-animals`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        }
+      });
+
+      console.log("Animals response:", response.data);
+      setAnimals(Array.isArray(response.data) ? response.data : []);
+      setLoading(false);
+    } catch (fetchError) {
+      // Remove fallback sample data logic
+      // Only show the real error from the backend
+      const errorMessage =
+        fetchError.response?.data?.details ||
+        fetchError.response?.data?.message ||
+        fetchError.message;
+      setError(`Server error: ${errorMessage}`);
+      setLoading(false);
+
+      // If there's a token issue, redirect to login
+      if (fetchError.response?.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
+    }
+  };
+
+  useEffect(() => {
     fetchAnimals();
-  }, []); // Removed navigate from dependencies to prevent loops
+  }, []);
 
+  // Fix the handleDelete function to use the fetchAnimals function
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this animal?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${API}/farm-animals/${id}`, {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "");
+
+      await axios.delete(`${baseUrl}/farm-animals/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchAnimals();
-    } catch {
-      setError("Failed to delete animal");
+    } catch (err) {
+      setError("Failed to delete animal: " + err.message);
     }
   };
 
@@ -91,11 +110,22 @@ export default function Dashboard() {
     );
   }
 
+  // Add a retry button if there's an error
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow text-center text-red-600">
-          {error}
+        <div className="bg-white p-8 rounded-lg shadow text-center">
+          <div className="text-red-600 mb-4">{error}</div>
+          <button
+            onClick={() => {
+              setLoading(true);
+              setError("");
+              window.location.reload();
+            }}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -204,7 +234,4 @@ export default function Dashboard() {
     </div>
   );
 }
-
-
-
-
+               

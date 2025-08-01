@@ -1,13 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { 
-  createAnimal, 
-  getAllAnimals, 
-  getAnimalById,
-  updateAnimal,
-  deleteAnimal 
-} = require("../controllers/farmAnimalController");
 const { protect } = require("../middleware/auth");
+const { createAnimal, getAllAnimals, getAnimalById, updateAnimal, deleteAnimal } = require("../controllers/farmAnimalController");
 
 // All routes need the protect middleware to ensure user is authenticated
 router.use(protect);

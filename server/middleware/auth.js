@@ -23,7 +23,7 @@ exports.protect = async (req, res, next) => {
       console.log("Decoded token:", decoded);
       
       // Set req.user to the decoded token which should contain user ID
-      req.user = decoded;
+      req.user = { id: decoded.id, role: decoded.role }; // Make sure id is present!
       
       console.log("User set on request:", req.user);
       next();

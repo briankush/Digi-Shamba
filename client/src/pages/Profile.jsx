@@ -138,18 +138,3 @@ export default function Profile() {
     </div>
   );
 }
-          </button>
-          <button
-            onClick={() => {
-              localStorage.clear();
-              navigate("/login");
-            }}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}

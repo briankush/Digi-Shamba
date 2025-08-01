@@ -1,22 +1,91 @@
 const FarmAnimal = require("../models/farmAnimal");
+const mongoose = require("mongoose");
 
-// POST /api/farm-animals
+// Get all farm animals for the logged-in user
+exports.getAllAnimals = async (req, res) => {
+  try {
+    console.log("getAllAnimals called with req:", {
+      user: req.user,
+      method: req.method,
+      url: req.originalUrl
+    });
+    
+    // Add defensive error handling
+    if (!req.user) {
+      console.error("No user object in request");
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+    
+    if (!req.user.id) {
+      console.error("No user ID found in request");
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+    
+    if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    
+    console.log("Looking up animals for user ID:", req.user.id);
+    
+    // Use a try/catch specifically for the database query
+    try {
+      // First just return all animals to see if we can access the database at all
+      const allAnimals = await FarmAnimal.find({}).lean();
+      console.log("Total animals in DB:", allAnimals.length);
+      console.log("Sample animal data:", allAnimals.length > 0 ? allAnimals[0] : "No animals");
+      
+      // Try to find by exact string ID first
+      let userAnimals = await FarmAnimal.find({ owner: req.user.id }).lean();
+      
+      // If that didn't work, try with ObjectId casting
+      if (userAnimals.length === 0 && mongoose.Types.ObjectId.isValid(req.user.id)) {
+        console.log("No animals found with string ID, trying with ObjectId");
+        userAnimals = await FarmAnimal.find({ owner: new mongoose.Types.ObjectId(req.user.id) }).lean();
+      }
+      
+      console.log("Animals found for user:", userAnimals.length);
+      return res.json(userAnimals);
+    } catch (dbError) {
+      console.error("Database query error:", dbError);
+      return res.status(500).json({ 
+        message: "Database query failed", 
+        details: dbError.message 
+      });
+    }
+  } catch (error) {
+    console.error("Error in getAllAnimals:", error);
+    console.error("Error stack:", error.stack);
+    return res.status(500).json({ 
+      message: "Server error while fetching animals", 
+      details: error.message
+    });
+  }
+};
 
 // Create a new farm animal
 exports.createAnimal = async (req, res) => {
   try {
-    console.log("Creating animal with data:", req.body);
-    console.log("Current user:", req.user);
+    console.log("createAnimal called with:", {
+      body: req.body,
+      user: req.user,
+      method: req.method
+    });
     
     const { name, breed, type, birthDate, weight, notes } = req.body;
     
-    // Verify that owner ID is properly formatted
-    if (!req.user || !req.user.id) {
-      console.error("User ID not available in request");
-      return res.status(400).json({ message: "User identification failed" });
+    // Add defensive error handling
+    if (!req.user) {
+      console.error("No user object in request");
+      return res.status(401).json({ message: "User not authenticated" });
     }
     
-    // Create animal with explicit owner field
+    const userId = req.user.id || req.user._id;
+    if (!userId) {
+      console.error("No user ID found in request");
+      return res.status(400).json({ message: "User ID not found in request" });
+    }
+    
+    // Create a new animal document with proper type casting
     const newAnimal = new FarmAnimal({
       name,
       breed,
@@ -24,93 +93,76 @@ exports.createAnimal = async (req, res) => {
       birthDate,
       weight,
       notes,
-      owner: req.user.id
+      owner: req.user.id // <-- this is critical!
     });
     
-    console.log("Animal to be saved:", newAnimal);
+    console.log("Saving new animal:", newAnimal);
     const savedAnimal = await newAnimal.save();
-    console.log("Animal saved successfully with ID:", savedAnimal._id);
+    console.log("Animal saved successfully:", savedAnimal);
     
     res.status(201).json(savedAnimal);
-  } catch (err) {
-    console.error("Error creating animal:", err);
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// Get all farm animals for the logged-in user
-exports.getAllAnimals = async (req, res) => {
-  try {
-    console.log("getAllAnimals called");
-    console.log("User from request:", req.user);
-    
-    if (!req.user || !req.user.id) {
-      console.error("User ID not available");
-      return res.status(400).json({ message: "User identification failed" });
-    }
-    
-    // Add debugging to show what we're querying for
-    console.log("Querying animals with owner ID:", req.user.id);
-    console.log("Owner ID type:", typeof req.user.id);
-    
-    // Check if the ID is a valid ObjectId
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(req.user.id);
-    console.log("Is valid ObjectId:", isValidObjectId);
-    
-    // Get all animals in DB first to check if they exist at all
-    const allAnimals = await FarmAnimal.find({});
-    console.log("All animals in DB:", allAnimals.length);
-    
-    // Now query for user's animals
-    const animals = await FarmAnimal.find({ owner: req.user.id });
-    console.log("User's animals found:", animals.length);
-    
-    return res.json(animals);
   } catch (error) {
-    console.error("Error in getAllAnimals:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error in createAnimal:", error);
+    console.error("Error stack:", error.stack);
+    res.status(500).json({ 
+      message: "Server error while creating animal", 
+      details: error.message
+    });
   }
 };
 
-// Get a single animal by ID
+// Get animal by ID (with error handling)
 exports.getAnimalById = async (req, res) => {
   try {
-    const animal = await FarmAnimal.findOne({ _id: req.params.id, owner: req.user._id });
-    if (!animal) {
-      return res.status(404).json({ error: 'Animal not found' });
+    const animalId = req.params.id;
+    const userId = req.user.id || req.user._id;
+    
+    if (!mongoose.Types.ObjectId.isValid(animalId)) {
+      return res.status(400).json({ message: "Invalid animal ID format" });
+    }onst animal = await FarmAnimal.findOne({
+      _id: animalId,
     }
+    
+    const animal = await FarmAnimal.findOne({
+      _id: animalId,l) {
+      owner: userId  return res.status(404).json({ message: "Animal not found" });
+    }).lean();
+    
+    if (!animal) {es.json(animal);
+      return res.status(404).json({ message: "Animal not found" });catch (error) {
+    }ror fetching animal by ID:", error);
+    .json({ message: "Server error", details: error.message });
     res.json(animal);
   } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    console.error("Error fetching animal by ID:", error);
+    res.status(500).json({ message: "Server error", details: error.message }); Update an animal by ID
+  }exports.updateAnimal = async (req, res) => {
 };
-
-// Update an animal by ID
+ndUpdate(
+// Update an animal by ID _id: req.params.id, owner: req.user._id },
 exports.updateAnimal = async (req, res) => {
   try {
     const animal = await FarmAnimal.findOneAndUpdate(
       { _id: req.params.id, owner: req.user._id },
-      req.body,
+      req.body,return res.status(404).json({ error: 'Animal not found' });
       { new: true, runValidators: true }
     );
-    if (!animal) {
-      return res.status(404).json({ error: 'Animal not found' });
+    if (!animal) {atch (error) {
+      return res.status(404).json({ error: 'Animal not found' });son({ error: error.message });
     }
     res.json(animal);
   } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
+    res.status(400).json({ error: error.message }); Delete an animal by ID
+  }exports.deleteAnimal = async (req, res) => {
 };
-
-// Delete an animal by ID
+ndDelete({ _id: req.params.id, owner: req.user._id });
+// Delete an animal by ID(!animal) {
 exports.deleteAnimal = async (req, res) => {
   try {
     const animal = await FarmAnimal.findOneAndDelete({ _id: req.params.id, owner: req.user._id });
-    if (!animal) {
+    if (!animal) {atch (error) {
       return res.status(404).json({ error: 'Animal not found' });
     }
-    res.json({ message: 'Animal deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.json({ message: 'Animal deleted successfully' });  } catch (error) {    res.status(500).json({ error: error.message });
   }
 };
