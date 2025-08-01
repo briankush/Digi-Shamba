@@ -243,11 +243,14 @@ export default function AnalyticsDashboard() {
     // Only run when form.month or milkData changes
   }, [form.month, milkData]);
 
-  // Add loading check for charts (AFTER all hooks, before return)
+  // Replace the existing loading indicator with this enhanced version
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8 pt-20 flex items-center justify-center">
-        <span className="text-xl text-gray-600">Loading analytics...</span>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p>Loading analytics data...</p>
+        </div>
       </div>
     );
   }
@@ -357,9 +360,6 @@ export default function AnalyticsDashboard() {
           className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 inline-flex items-center gap-2"
         >
           <FaCalendarAlt /> View Daily Records
-        </button>
-      </div>
-
       {/* Line Chart */}
       <div className="bg-white p-4 rounded-lg shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Profit/Loss Trend</h2>
