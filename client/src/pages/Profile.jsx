@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
   const { user } = useContext(AuthContext);
@@ -113,16 +113,24 @@ export default function Profile() {
           </>
         )}
 
-        <div className="pt-4 flex justify-between mt-4">
+        <div className="pt-4 flex flex-col sm:flex-row justify-between mt-4 gap-2">
           <button
             onClick={() =>
               navigate(
-                profileData?.role?.toLowerCase() === "admin" ? "/admin" : "/dashboard"
+                profileData?.role?.toLowerCase() === "admin"
+                  ? "/admin"
+                  : "/dashboard"
               )
             }
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
           >
             Back to Dashboard
+          </button>
+          <button
+            onClick={() => navigate("/change-password")}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Change Password
           </button>
           <button
             onClick={() => {
