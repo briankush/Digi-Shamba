@@ -23,6 +23,7 @@ const Admin = lazy(() => import("./pages/AdminDashboard"));
 const AddAnimal = lazy(() => import("./pages/AddAnimal"));
 const Profile = lazy(() => import("./pages/Profile"));
 const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard"));
+const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 
 function App() {
   return (
@@ -101,6 +102,16 @@ function App() {
                 element={
                   <PrivateRoute>
                     <Profile />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Change Password */}
+              <Route
+                path="/change-password"
+                element={
+                  <PrivateRoute>
+                    <ChangePassword />
                   </PrivateRoute>
                 }
               />
