@@ -29,50 +29,41 @@ export default function Profile() {
     // Get baseUrl from environment
     let baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/$/, "");
 
-    // Try multiple potential endpoints
-    const tryEndpoints = async () => {
-      const endpoints = [
-        `${baseUrl}/api/auth/me`,
-        `${baseUrl}/auth/me`,
-        `${baseUrl}/api/auth/profile`,
-        `${baseUrl}/auth/profile`,
-      ];
+    // Use only the confirmed working endpoint
+    const fetchProfile = async () => {
+      try {
+        // This is the endpoint that worked in logs
+        const endpoint = `${baseUrl}/auth/me`;
+        console.log("Fetching profile from:", endpoint);
 
-      for (const endpoint of endpoints) {
-        try {
-          console.log("Trying endpoint:", endpoint);
-          const res = await axios.get(endpoint, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+        const res = await axios.get(endpoint, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-          console.log("Success from endpoint:", endpoint, "Data:", res.data);
-          // If we get here, request succeeded
-          const data = res.data.user || res.data;
-          setProfileData({
-            name: data.name || localStorage.getItem("userName") || "Guest",
-            email: data.email || localStorage.getItem("userEmail") || "Not Provided",
-            role: data.role || localStorage.getItem("userRole") || "User",
-          });
-          setLoading(false);
-          return; // Exit on successful response
-        } catch (err) {
-          console.log(`Endpoint ${endpoint} failed:`, err.message);
-          // Continue to next endpoint if this one fails
-        }
+        console.log("Profile data received:", res.data);
+        const data = res.data.user || res.data;
+
+        setProfileData({
+          name: data.name || localStorage.getItem("userName") || "Guest",
+          email: data.email || localStorage.getItem("userEmail") || "Not Provided",
+          role: data.role || localStorage.getItem("userRole") || "User",
+        });
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+
+        // Fallback to localStorage
+        setProfileData({
+          name: localStorage.getItem("userName") || "Guest",
+          email: localStorage.getItem("userEmail") || "Not Provided",
+          role: localStorage.getItem("userRole") || "User",
+        });
+        setError("Could not fetch profile from server. Showing local data.");
+      } finally {
+        setLoading(false);
       }
-
-      // If all endpoints failed, fall back to localStorage
-      console.log("All endpoints failed, falling back to localStorage");
-      setProfileData({
-        name: localStorage.getItem("userName") || "Guest",
-        email: localStorage.getItem("userEmail") || "Not Provided",
-        role: localStorage.getItem("userRole") || "User",
-      });
-      setError("Could not fetch profile from server. Showing local data.");
-      setLoading(false);
     };
 
-    tryEndpoints();
+    fetchProfile();
   }, []);
 
   if (loading) {
@@ -154,3 +145,4 @@ export default function Profile() {
     </div>
   );
 }
+            
