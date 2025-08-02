@@ -70,7 +70,7 @@ export default function Profile() {
     );
   }
 
-  // Ensure profileData exists before rendering
+  // Ensure profileData is fetched and email is displayed
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 p-6 sm:p-10 pt-20">
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-8">
@@ -97,7 +97,11 @@ export default function Profile() {
             <div className="space-y-4">
               <div className="border-b pb-4">
                 <p className="text-sm text-gray-500">Email Address</p>
-                <p className="font-medium">{profileData.email}</p>
+                <p className="font-medium">
+                  {profileData?.email && profileData.email.trim() !== ""
+                    ? profileData.email
+                    : "Not Provided"}
+                </p>
               </div>
               <div className="border-b pb-4">
                 <p className="text-sm text-gray-500">Role</p>

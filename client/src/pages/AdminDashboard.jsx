@@ -2,8 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { Users, AlertCircle } from "lucide-react";
-import { FaCow } from "react-icons/fa6";
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useContext(AuthContext);
@@ -13,28 +11,13 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Greeting message logic
-  const adminName = user ? user.name : "Admin";
-  const fullMessage = `Welcome back, ${adminName}!`;
-  const [typedMsg, setTypedMsg] = useState("");
-
   useEffect(() => {
-    let idx = 0;
-    const interval = setInterval(() => {
-      setTypedMsg(fullMessage.slice(0, idx + 1));
-      idx++;
-      if (idx > fullMessage.length) clearInterval(interval);
-    }, 100);
-    return () => clearInterval(interval);
-  }, [fullMessage]);
-
-  useEffect(() => {
-    if (authLoading) return; // Wait for AuthContext to finish loading
+    if (authLoading) return;
     if (!user) {
       navigate("/login");
       return;
     }
-    if (user.role.toLowerCase() !== "admin") {
+    if (!user.role || user.role.toLowerCase() !== "admin") {
       navigate("/dashboard");
       return;
     }
@@ -50,19 +33,29 @@ export default function AdminDashboard() {
           "Content-Type": "application/json",
         };
 
+        // Debug: log endpoints and token
+        console.log("Fetching users from:", `${baseUrl}/admin/users`);
+        console.log("Fetching animals from:", `${baseUrl}/admin/animals`);
+        console.log("Token:", token);
+
         // Fetch users
         const usersRes = await axios.get(`${baseUrl}/admin/users`, { headers });
+        console.log("Users response:", usersRes.data);
         setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
 
         // Fetch animals
         const animalsRes = await axios.get(`${baseUrl}/admin/animals`, { headers });
+        console.log("Animals response:", animalsRes.data);
         setAnimals(Array.isArray(animalsRes.data) ? animalsRes.data : []);
 
         setLoading(false);
       } catch (err) {
+        // Log error for debugging
+        console.error("Admin fetch error:", err);
         setError(
           err.response?.data?.message ||
           err.response?.data?.details ||
+          err.message ||
           "Failed to fetch admin data."
         );
         setLoading(false);
@@ -94,139 +87,67 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 p-6 sm:p-10 pt-20">
-      <div className="max-w-4xl mx-auto bg-white shadow-md rounded-xl p-6">
-        {/* Greeting */}
-        <div className="mb-6 mt-10">
-          <h2 className="text-2xl font-medium text-green-700">
-            {typedMsg}
-            {typedMsg.length <= fullMessage.length && (
-              <span className="blinking-cursor">|</span>
-            )}
-          </h2>
-          <h1 className="text-4xl font-bold text-center mt-4 text-green-800">
-            Admin Dashboard
-          </h1>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white shadow-lg rounded-xl p-6 flex items-center gap-4 hover:shadow-xl transition-all duration-300">
-            <div className="bg-green-100 p-3 rounded-full">
-              <Users className="text-green-600 w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-gray-500 text-sm">Total Farmers</h3>
-              <p className="text-2xl font-bold text-green-700">
-                {users.length}
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white shadow-lg rounded-xl p-6 flex items-center gap-4 hover:shadow-xl transition-all duration-300">
-            <div className="bg-green-100 p-3 rounded-full">
-              <FaCow className="text-green-600 w-6 h-6" /> {/* Changed from Cow to FaCow */}
-            </div>
-            <div>
-              <h3 className="text-gray-500 text-sm">Total Animals</h3>
-              <p className="text-2xl font-bold text-green-700">
-                {animals.length}
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white shadow-lg rounded-xl p-6 flex items-center gap-4 hover:shadow-xl transition-all duration-300">
-            <div className="bg-green-100 p-3 rounded-full">
-              <AlertCircle className="text-green-600 w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-gray-500 text-sm">Active Admin</h3>
-              <p className="text-2xl font-bold text-green-700">1</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Farmers Section */}
-        <section className="mb-12 bg-white shadow-lg rounded-2xl p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold text-green-700 mb-2 sm:mb-0">
-              All Farmers
-            </h2>
-            <span className="text-lg text-gray-600">
-              Total Farmers:{" "}
-              <span className="font-bold">{users.length}</span>
-            </span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full table-auto border-collapse rounded-lg overflow-hidden">
-              <thead className="bg-green-100">
-                <tr>
-                  <th className="px-4 py-2 text-left text-green-800">Name</th>
-                  <th className="px-4 py-2 text-left text-green-800">Email</th>
-                  <th className="px-4 py-2 text-left text-green-800">Role</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u, index) => (
-                  <tr
-                    key={u._id}
-                    className={`${
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } hover:bg-green-50 transition-colors`}
-                  >
-                    <td className="px-4 py-2 border-b">{u.name}</td>
-                    <td className="px-4 py-2 border-b">{u.email}</td>
-                    <td className="px-4 py-2 border-b">{u.role}</td>
+    <div className="min-h-screen bg-white text-black p-8 pt-20">
+      <h1 className="text-3xl font-bold mb-8 text-green-800">Admin Dashboard</h1>
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-10">
+          <h2 className="text-2xl font-semibold mb-4">All Users</h2>
+          {users.length === 0 ? (
+            <div className="text-gray-600">No users found.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white border rounded">
+                <thead>
+                  <tr>
+                    <th className="py-2 px-4 border-b">Name</th>
+                    <th className="py-2 px-4 border-b">Email</th>
+                    <th className="py-2 px-4 border-b">Role</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* Animals Section */}
-        <section className="bg-white shadow-lg rounded-2xl p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold text-green-700 mb-2 sm:mb-0">
-              All Animals
-            </h2>
-            <span className="text-lg text-gray-600">
-              Total Animals:{" "}
-              <span className="font-bold">{animals.length}</span>
-            </span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full table-auto border-collapse rounded-lg overflow-hidden">
-              <thead className="bg-green-100">
-                <tr>
-                  <th className="px-4 py-2 text-left text-green-800">
-                    Name / Tag Number
-                  </th>
-                  <th className="px-4 py-2 text-left text-green-800">Type</th>
-                  <th className="px-4 py-2 text-left text-green-800">Breed</th>
-                  <th className="px-4 py-2 text-left text-green-800">Owner</th>
-                </tr>
-              </thead>
-              <tbody>
-                {animals.map((a, index) => (
-                  <tr
-                    key={a._id}
-                    className={`${
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } hover:bg-green-50 transition-colors`}
-                  >
-                    <td className="px-4 py-2 border-b">{a.name}</td>
-                    <td className="px-4 py-2 border-b">{a.type}</td>
-                    <td className="px-4 py-2 border-b">{a.breed}</td>
-                    <td className="px-4 py-2 border-b">
-                      {a.owner?.name || a.owner?.email || "Unknown"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                </thead>
+                <tbody>
+                  {users.map((u) => (
+                    <tr key={u._id}>
+                      <td className="py-2 px-4 border-b">{u.name}</td>
+                      <td className="py-2 px-4 border-b">{u.email}</td>
+                      <td className="py-2 px-4 border-b">{u.role}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">All Animals</h2>
+          {animals.length === 0 ? (
+            <div className="text-gray-600">No animals found.</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {animals.map((a) => (
+                <div key={a._id} className="bg-gray-100 p-4 rounded shadow">
+                  <h3 className="text-xl font-bold text-green-700">{a.name}</h3>
+                  <p>
+                    <span className="font-medium">Type:</span> {a.type}
+                  </p>
+                  <p>
+                    <span className="font-medium">Breed:</span> {a.breed}
+                  </p>
+                  <p>
+                    <span className="font-medium">Owner:</span> {a.owner?.name || a.owner}
+                  </p>
+                  <p>
+                    <span className="font-medium">Weight:</span> {a.weight} kg
+                  </p>
+                  {a.notes && (
+                    <p className="mt-2 text-gray-600">
+                      <span className="font-medium">Notes:</span> {a.notes}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
