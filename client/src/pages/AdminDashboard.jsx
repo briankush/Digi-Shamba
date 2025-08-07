@@ -40,43 +40,41 @@ export default function AdminDashboard() {
 
         // Fetch users
         const usersRes = await axios.get(`${baseUrl}/admin/users`, { headers });
-        console.log("Users response:", usersRes.data, typeof usersRes.data);
-        // Defensive: handle both array and object response
+        console.log("Users response:", usersRes.data, typeof usersRes.data, "Status:", usersRes.status);
         setUsers(Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data.users || []));
+        if (usersRes.status !== 200) {
+          setError(`Users fetch error: HTTP ${usersRes.status}`);
+        }
 
         // Fetch animals
         const animalsRes = await axios.get(`${baseUrl}/admin/animals`, { headers });
-        console.log("Animals response:", animalsRes.data, typeof animalsRes.data);
+        console.log("Animals response:", animalsRes.data, typeof animalsRes.data, "Status:", animalsRes.status);
         setAnimals(Array.isArray(animalsRes.data) ? animalsRes.data : (animalsRes.data.animals || []));
+        if (animalsRes.status !== 200) {
+          setError(`Animals fetch error: HTTP ${animalsRes.status}`);
+        }
 
         setLoading(false);
+        console.log("Set loading to false");
       } catch (err) {
         // Log error for debugging
         console.error("Admin fetch error:", err, err.response?.data);
         setError(
-          err.response?.data?.message ||
+          `Status: ${err.response?.status || "?"} - ` +
+          (err.response?.data?.message ||
           err.response?.data?.details ||
           err.message ||
-          "Failed to fetch admin data."
+          "Failed to fetch admin data.")
         );
         setLoading(false);
+        console.log("Set loading to false after error");
       }
     };
 
     fetchData();
   }, [user, authLoading, navigate]);
 
-  if (authLoading || loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-          <p>Loading admin dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Remove loading animation, just show error if present
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
