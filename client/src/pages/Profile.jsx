@@ -98,8 +98,14 @@ export default function Profile() {
               <div className="border-b pb-4">
                 <p className="text-sm text-gray-500">Email Address</p>
                 <p className="font-medium">
+                  {/* Show email from profileData, fallback to user or localStorage */}
                   {profileData?.email && profileData.email.trim() !== ""
                     ? profileData.email
+                    : user?.email && user.email.trim() !== ""
+                    ? user.email
+                    : localStorage.getItem("userEmail") &&
+                      localStorage.getItem("userEmail").trim() !== ""
+                    ? localStorage.getItem("userEmail")
                     : "Not Provided"}
                 </p>
               </div>

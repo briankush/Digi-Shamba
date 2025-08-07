@@ -40,18 +40,19 @@ export default function AdminDashboard() {
 
         // Fetch users
         const usersRes = await axios.get(`${baseUrl}/admin/users`, { headers });
-        console.log("Users response:", usersRes.data);
-        setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
+        console.log("Users response:", usersRes.data, typeof usersRes.data);
+        // Defensive: handle both array and object response
+        setUsers(Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data.users || []));
 
         // Fetch animals
         const animalsRes = await axios.get(`${baseUrl}/admin/animals`, { headers });
-        console.log("Animals response:", animalsRes.data);
-        setAnimals(Array.isArray(animalsRes.data) ? animalsRes.data : []);
+        console.log("Animals response:", animalsRes.data, typeof animalsRes.data);
+        setAnimals(Array.isArray(animalsRes.data) ? animalsRes.data : (animalsRes.data.animals || []));
 
         setLoading(false);
       } catch (err) {
         // Log error for debugging
-        console.error("Admin fetch error:", err);
+        console.error("Admin fetch error:", err, err.response?.data);
         setError(
           err.response?.data?.message ||
           err.response?.data?.details ||
@@ -92,6 +93,10 @@ export default function AdminDashboard() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-10">
           <h2 className="text-2xl font-semibold mb-4">All Users</h2>
+          <pre className="text-xs bg-gray-100 p-2 mb-2 rounded text-gray-500">
+            {/* Debug: show raw users data */}
+            {JSON.stringify(users, null, 2)}
+          </pre>
           {users.length === 0 ? (
             <div className="text-gray-600">No users found.</div>
           ) : (
@@ -119,6 +124,10 @@ export default function AdminDashboard() {
         </div>
         <div>
           <h2 className="text-2xl font-semibold mb-4">All Animals</h2>
+          <pre className="text-xs bg-gray-100 p-2 mb-2 rounded text-gray-500">
+            {/* Debug: show raw animals data */}
+            {JSON.stringify(animals, null, 2)}
+          </pre>
           {animals.length === 0 ? (
             <div className="text-gray-600">No animals found.</div>
           ) : (

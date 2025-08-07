@@ -73,7 +73,6 @@ router.post("/signup", async (req, res) => {
 // Simple login endpoint
 router.post("/login", async (req, res) => {
   try {
-    // Implement your login logic here
     res.json({
       message: "Login successful",
       user: { id: "dummy-user-id", name: "Farmer" },

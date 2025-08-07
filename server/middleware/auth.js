@@ -20,10 +20,12 @@ exports.protect = async (req, res, next) => {
     try {
       console.log("Verifying token...");
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("Decoded token:", decoded);
-      
-      // Set req.user to the decoded token which should contain user ID
-      req.user = { id: decoded.id, role: decoded.role }; // Make sure id is present!
+      // Fetch full user document for admin endpoints
+      const user = await User.findById(decoded.id).select("-password");
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      req.user = { id: user._id, role: user.role, name: user.name, email: user.email };
       
       console.log("User set on request:", req.user);
       next();
