@@ -41,7 +41,7 @@ export default function Login() {
       // Save user info to localStorage
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("userName", response.data.name);
-      localStorage.setItem("userEmail", response.data.email || "");
+      localStorage.setItem("userEmail", response.data.email || ""); // Note: using email not userEmail
       localStorage.setItem("userRole", response.data.role);
 
       // Redirect based on role

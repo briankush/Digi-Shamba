@@ -10,122 +10,98 @@ export default function AdminDashboard() {
   const [animals, setAnimals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [debugInfo, setDebugInfo] = useState({});
+  const [typedMsg, setTypedMsg] = useState("");
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  // Define fullMessage
+  const fullMessage = "Admin Dashboard";
+
+  // Typing effect
+  useEffect(() => {
+    let idx = 0;
+    const interval = setInterval(() => {
+      setTypedMsg(fullMessage.slice(0, idx + 1));
+      idx++;
+      if (idx > fullMessage.length) clearInterval(interval);
+    }, 100); // normal speed
+    return () => clearInterval(interval);
+  }, [fullMessage]);
+
+  // If token exists but user is not yet loaded, show a loading indicator.
+  if (localStorage.getItem("token") && user === null) {
+    return <div className="p-8 text-center">Loading user info...</div>;
+  }
+  
+  // Only redirect when user data is available.
+  if (localStorage.getItem("token") && user && user.role.toLowerCase() !== "admin") {
+    navigate("/dashboard");
+    return null;
+  }
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-    if (!user.role || user.role.toLowerCase() !== "admin") {
+    if (!user || user.role.toLowerCase() !== "admin") {
       navigate("/dashboard");
       return;
     }
 
+    // *** USING THE WORKING FETCH LOGIC FROM BEFORE ***
+    const token = localStorage.getItem("token");
+    let API = import.meta.env.VITE_API_BASE_URL;
+    
+    if (API && !API.startsWith("http")) {
+      API = `https://${API}`;
+    }
+    
     const fetchData = async () => {
-      setLoading(true);
-      setError("");
-      setDebugInfo({});
-      
       try {
-        const token = localStorage.getItem("token");
-        const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") || "http://localhost:5000";
-        
-        const debugData = {
-          baseUrl,
-          token: token ? "Present" : "Missing",
-          userRole: user.role,
-          timestamp: new Date().toISOString()
-        };
-        setDebugInfo(debugData);
-        
         const headers = {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          Accept: "application/json",
         };
-
-        console.log("Admin Dashboard: Starting data fetch...");
-        console.log("API Base URL:", baseUrl);
-        console.log("User role:", user.role);
-
-        // Fetch users
-        console.log("Fetching users...");
-        const usersRes = await axios.get(`${baseUrl}/admin/users`, { headers });
-        console.log("Users response status:", usersRes.status);
-        console.log("Users data type:", typeof usersRes.data);
-        console.log("Users data length:", Array.isArray(usersRes.data) ? usersRes.data.length : "Not an array");
         
-        if (!Array.isArray(usersRes.data)) {
-          console.error("Users response is not an array:", usersRes.data);
-          throw new Error("Invalid response format for users");
+        try {
+          const uRes = await axios.get(`${API}/admin/users`, { headers });
+          setUsers(uRes.data);
+        } catch (userErr) {
+          setError(`Failed to fetch users: ${userErr.message}`);
         }
-        setUsers(usersRes.data);
-
-        // Fetch animals
-        console.log("Fetching animals...");
-        const animalsRes = await axios.get(`${baseUrl}/admin/animals`, { headers });
-        console.log("Animals response status:", animalsRes.status);
-        console.log("Animals data type:", typeof animalsRes.data);
-        console.log("Animals data length:", Array.isArray(animalsRes.data) ? animalsRes.data.length : "Not an array");
         
-        if (!Array.isArray(animalsRes.data)) {
-          console.error("Animals response is not an array:", animalsRes.data);
-          throw new Error("Invalid response format for animals");
+        try {
+          const aRes = await axios.get(`${API}/admin/animals`, { headers });
+          setAnimals(aRes.data);
+        } catch (animalErr) {
+          setError(`Failed to fetch animals: ${animalErr.message}`);
         }
-        setAnimals(animalsRes.data);
-
-        setLoading(false);
-        console.log("Admin Dashboard: Data fetch completed successfully");
       } catch (err) {
-        console.error("Admin Dashboard: Fetch error:", err);
-        
-        const errorDetails = {
-          message: err.message,
-          status: err.response?.status,
-          statusText: err.response?.statusText,
-          data: err.response?.data,
-          url: err.config?.url
-        };
-        
-        console.error("Error details:", errorDetails);
-        
-        setError(
-          `Error: ${err.message}\n` +
-          `Status: ${err.response?.status || "Network Error"}\n` +
-          `Details: ${err.response?.data?.message || "Check console for more info"}`
-        );
+        if (err.response && err.response.status === 401) {
+          setError("Authentication failed. Please login again.");
+        } else {
+          setError(`Error: ${err.message}`);
+        }
+      } finally {
         setLoading(false);
       }
     };
-
+    
     fetchData();
-  }, [user, authLoading, navigate]);
+  }, [user, navigate]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading admin data...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Error display
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-          <h3 className="text-lg font-semibold text-red-600 mb-3">Error Loading Data</h3>
-          <pre className="text-sm text-gray-700 whitespace-pre-wrap mb-4">{error}</pre>
-          <div className="text-xs text-gray-500">
-            <h4 className="font-semibold mb-1">Debug Info:</h4>
-            <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md">
+          <div className="text-red-500 text-5xl mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
           </div>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Occurred</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors shadow-md"
           >
             Retry
           </button>
@@ -135,77 +111,269 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-black p-8 pt-20">
-      <h1 className="text-3xl font-bold mb-8 text-green-800">Admin Dashboard</h1>
-      
-      {/* Debug Info Panel */}
-      <div className="mb-4 p-4 bg-gray-100 rounded-lg text-sm">
-        <h3 className="font-semibold mb-2">Debug Information:</h3>
-        <pre className="text-xs">{JSON.stringify(debugInfo, null, 2)}</pre>
-      </div>
+    <div className="min-h-screen bg-gray-100">
+      {/* Main Navbar - Keep just this one */}
+      <header className="bg-green-800 shadow-md p-4 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-2xl font-bold text-white">Digi-Shamba</h1>
+          <div className="flex space-x-2 ml-8">
+            <button 
+              onClick={() => setActiveTab("dashboard")}
+              className={`px-4 py-2 rounded-md ${activeTab === "dashboard" ? "bg-green-700 text-white" : "text-white hover:bg-green-700"}`}
+            >
+              Dashboard
+            </button>
+            <button 
+              onClick={() => setActiveTab("users")}
+              className={`px-4 py-2 rounded-md ${activeTab === "users" ? "bg-green-700 text-white" : "text-white hover:bg-green-700"}`}
+            >
+              Users
+            </button>
+            <button 
+              onClick={() => setActiveTab("animals")}
+              className={`px-4 py-2 rounded-md ${activeTab === "animals" ? "bg-green-700 text-white" : "text-white hover:bg-green-700"}`}
+            >
+              Animals
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <span className="text-sm text-white">Welcome, {user?.name || "Admin"}</span>
+          <div className="h-8 w-8 rounded-full bg-white text-green-800 flex items-center justify-center">
+            {user?.name?.charAt(0).toUpperCase() || "A"}
+          </div>
+          <button 
+            onClick={() => {
+              localStorage.clear();
+              navigate("/login");
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+          >
+            Logout
+          </button>
+        </div>
+      </header>
 
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-10">
-          <h2 className="text-2xl font-semibold mb-4">All Users ({users.length})</h2>
-          {users.length === 0 ? (
-            <div className="text-gray-600 bg-yellow-50 p-4 rounded">
-              <p>No users found. This could indicate:</p>
-              <ul className="list-disc ml-6 mt-2">
-                <li>No users in database</li>
-                <li>Database connection issue</li>
-                <li>Authentication problem</li>
-              </ul>
+      {/* Content Area */}
+      <div className="p-6">
+        {/* Dashboard Tab */}
+        {activeTab === "dashboard" && (
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-blue-100 text-blue-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-gray-700">Total Users</h3>
+                    <p className="text-3xl font-bold text-gray-900">{users.length}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-green-100 text-green-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-gray-700">Total Animals</h3>
+                    <p className="text-3xl font-bold text-gray-900">{animals.length}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-purple-100 text-purple-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-gray-700">Admin Users</h3>
+                    <p className="text-3xl font-bold text-gray-900">
+                      {users.filter(u => u.role === "Admin").length}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-          ) : (
+            
+            {/* Recent Users */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-700">Recent Users</h3>
+                <button 
+                  onClick={() => setActiveTab("users")}
+                  className="text-sm text-green-600 hover:text-green-800"
+                >
+                  View All
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {users.slice(0, 5).map((u) => (
+                      <tr key={u._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.role === 'Admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}`}>
+                            {u.role}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            {/* Recent Animals */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-700">Recent Animals</h3>
+                <button 
+                  onClick={() => setActiveTab("animals")}
+                  className="text-sm text-green-600 hover:text-green-800"
+                >
+                  View All
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {animals.slice(0, 5).map((a) => (
+                      <tr key={a._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{a.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{a.type}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{a.owner?.name || "Unknown"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Users Tab - Remove the separate back button */}
+        {activeTab === "users" && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-700">All Users ({users.length})</h3>
+              <div className="flex space-x-2">
+                <input 
+                  type="text" 
+                  placeholder="Search users..." 
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+                <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                  Search
+                </button>
+              </div>
+            </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border rounded">
-                <thead>
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className="py-2 px-4 border-b">Name</th>
-                    <th className="py-2 px-4 border-b">Email</th>
-                    <th className="py-2 px-4 border-b">Role</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white divide-y divide-gray-200">
                   {users.map((u) => (
-                    <tr key={u._id}>
-                      <td className="py-2 px-4 border-b">{u.name}</td>
-                      <td className="py-2 px-4 border-b">{u.email}</td>
-                      <td className="py-2 px-4 border-b">{u.role}</td>
+                    <tr key={u._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.role === 'Admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}`}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button className="text-blue-600 hover:text-blue-800 mr-2">View</button>
+                        <button className="text-red-600 hover:text-red-800">Delete</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">All Animals ({animals.length})</h2>
-          {animals.length === 0 ? (
-            <div className="text-gray-600 bg-yellow-50 p-4 rounded">
-              <p>No animals found. This could indicate:</p>
-              <ul className="list-disc ml-6 mt-2">
-                <li>No animals in database</li>
-                <li>Database connection issue</li>
-                <li>Authentication problem</li>
-              </ul>
+        {/* Animals Tab - Remove the separate back button */}
+        {activeTab === "animals" && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-700">All Animals ({animals.length})</h3>
+              <div className="flex space-x-2">
+                <input 
+                  type="text" 
+                  placeholder="Search animals..." 
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+                <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                  Search
+                </button>
+              </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {animals.map((a) => (
-                <div key={a._id} className="bg-gray-100 p-4 rounded shadow">
-                  <h3 className="text-xl font-bold text-green-700">{a.name}</h3>
-                  <p><span className="font-medium">Type:</span> {a.type}</p>
-                  <p><span className="font-medium">Breed:</span> {a.breed}</p>
-                  <p><span className="font-medium">Owner:</span> {a.owner?.name || "Unknown"}</p>
-                  <p><span className="font-medium">Weight:</span> {a.weight} kg</p>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Breed</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight (kg)</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {animals.map((a) => (
+                    <tr key={a._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{a.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{a.type}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{a.breed}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{a.owner?.name || "Unknown"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{a.weight}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button className="text-blue-600 hover:text-blue-800 mr-2">View</button>
+                        <button className="text-red-600 hover:text-red-800">Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+                
